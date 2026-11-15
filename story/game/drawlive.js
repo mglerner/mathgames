@@ -78,7 +78,8 @@ export function drawLive(ctx, w, towers, o) {
       const r = (big ? 9 : 5) * Math.abs(Math.cos(now / 60 + d.id));
       for (const dx of [-bw / 2 + 3, bw / 2 - 3]) { ctx.beginPath(); ctx.moveTo(p.x + dx - r, y - bh / 2 - 3); ctx.lineTo(p.x + dx + r, y - bh / 2 - 3); ctx.stroke(); }
       ctx.lineWidth = 1;
-      ctx.fillStyle = big ? '#3a2f4f' : '#2b3350'; ctx.fillRect(p.x - bw / 2, y - bh / 2, bw, bh);
+      ctx.fillStyle = big ? '#a58bd0' : '#9aa6c9'; ctx.fillRect(p.x - bw / 2, y - bh / 2, bw, bh);
+      ctx.fillStyle = BAD; ctx.fillRect(p.x - 2, y - 2, 4, 4); // its eye
       if (s.shield) {
         ctx.strokeStyle = GOLD; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p.x, y, big ? 28 : 14, 0, Math.PI * 2); ctx.stroke();
         ctx.fillStyle = 'rgba(226,182,90,.10)'; ctx.fill(); ctx.lineWidth = 1;
@@ -91,7 +92,12 @@ export function drawLive(ctx, w, towers, o) {
     if (s.shield && reach(s) > -10) {
       const p = pointAt(reach(s));
       const lift = big ? 44 : 30;
-      const py = p.y - lift < 12 ? p.y + lift : p.y - lift;
+      // above the leader on a level stretch; beside it on a climb, so it does not cover the drones behind
+      const back = pointAt(reach(s) - 6);
+      const upright = Math.abs(back.y - p.y) > Math.abs(back.x - p.x);
+      const px0 = upright ? (p.x + lift + 8 > MAP_W - 22 ? p.x - lift - 8 : p.x + lift + 8) : p.x;
+      const py = upright ? p.y : p.y - lift < 12 ? p.y + lift : p.y - lift;
+      p.x = px0;
       ctx.fillStyle = GOLD; ctx.fillRect(p.x - 21, py - 10, 42, 20);
       ctx.fillStyle = '#1a1407'; ctx.font = '600 12px -apple-system, system-ui, sans-serif';
       ctx.fillText(GLYPH[plateOf(s).skill] || '?', p.x, py + 1);
