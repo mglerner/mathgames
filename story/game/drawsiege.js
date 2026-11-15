@@ -73,9 +73,9 @@ export function drawSiege(ctx, w, towers, o) {
     const pos = was + (d.pos - was) * t;
     const n = stack[d.pos] = (stack[d.pos] || 0) + 1;
     const big = d.boss;
-    const bw = big ? 54 : 40, bh = big ? 30 : 20;
+    const bw = big ? 56 : 46, bh = big ? 32 : 24;
     const x = squareX(pos, lane);
-    const y = (big ? 70 : 62) + (n - 1) * 26 + 3 * Math.sin(now / 400 + d.id);
+    const y = (big ? 70 : 60) + (n - 1) * 30 + 3 * Math.sin(now / 400 + d.id);
     // rotors
     ctx.strokeStyle = '#9aa0ad'; ctx.lineWidth = 2;
     const r = 9 * Math.abs(Math.cos(now / 60 + d.id));
@@ -85,7 +85,7 @@ export function drawSiege(ctx, w, towers, o) {
     ctx.fillStyle = big ? '#3a2f4f' : '#2b3350';
     ctx.fillRect(x - bw / 2, y - bh / 2, bw, bh);
     ctx.fillStyle = '#e2b65a'; ctx.fillRect(x - bw / 2 + 4, y - bh / 2 + 4, bw - 8, bh - 8);
-    ctx.fillStyle = '#1a1407'; ctx.font = `600 ${big ? 13 : 11}px -apple-system, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#1a1407'; ctx.font = `600 ${big ? 14 : 12}px -apple-system, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(GLYPH[plateOf(d).skill] || '?', x, y + 1);
     ctx.textBaseline = 'alphabetic';
     if (big) for (let i = 0; i < d.plates.length - d.at; i++) { ctx.fillStyle = '#e2b65a'; ctx.fillRect(x - bw / 2 + i * 8, y + bh / 2 + 3, 5, 5); }

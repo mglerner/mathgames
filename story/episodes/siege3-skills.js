@@ -3,11 +3,12 @@
 // Same shape as heist2-skills.js (see the notes at the top of that file).
 // story/test/siege3.test.js checks every fraction problem against independent arithmetic.
 import { F, M } from './pilot.js';
-import { problem as problem2, count as count2, SKILLS as SKILLS2, B, G, A, T, red, shuffle, finish, near, range, cross, enough } from './heist2-skills.js';
+import { problem as problem2, count as count2, SKILLS as SKILLS2, B, G, A, T, DO, red, shuffle, finish, near, range, cross, enough } from './heist2-skills.js';
 
 const gcd = (a, b) => (b ? gcd(b, a % b) : Math.abs(a));
 /** A fraction as the student would write it (not reduced). */
-const fr = (n, d) => F(n < 0 ? `${M}${-n}` : n, d);
+const neg = (x) => (typeof x === 'number' && x < 0 ? `${M}${-x}` : x);
+const fr = (n, d) => F(neg(n), neg(d));
 /** A value in lowest terms, for an answer button. */
 const low = (n, d) => { const [a, b] = red(n, d); return b === 1 ? `${a < 0 ? M : ''}${Math.abs(a)}` : `${a < 0 ? M : ''}${F(Math.abs(a), b)}`; };
 const lowT = (n, d) => { const [a, b] = red(n, d); return b === 1 ? `${a}` : `${a}/${b}`; };
@@ -66,7 +67,7 @@ function frac([a, b, c, d, sg]) {
   ];
   return {
     askTxt: exprT, ansTxt: `${N}/${D}`,
-    ask: `<span class="nw">${expr}</span>`, show: `<span class="nw">${expr}</span>`,
+    ask: `${DO('Work out, in lowest terms')}<span class="nw">${expr}</span>`, show: `<span class="nw">${expr}</span>`,
     typed: `<span class="nw">${expr} = ${F('{0}', '{1}')}</span>`,
     typedHint: 'Top box, then bottom box. Give the answer in lowest terms.',
     boxes: 2, answer: [N, D], options, worked,

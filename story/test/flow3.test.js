@@ -172,7 +172,7 @@ test('episode 3: full play-through', async () => {
   assert.deepEqual(st().plan.w3.levels, { frac: 'new' });
   assert.equal(st().plan.w3.scouts.length, 2, 'a new skill gets a scout for each shape');
   click('Get ready');
-  assert.match(html(), /Work out/);
+  assert.match(html(), /Work out, in lowest terms/);
   scouts(2, false);
   click('To the corridor');
   assert.ok(st().w.drones.every((d) => P(d.ref).skill === 'frac'));

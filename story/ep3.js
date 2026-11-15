@@ -11,7 +11,7 @@
 import { content, TUNING } from './episodes/siege3.js';
 import { problem, count, SKILLS } from './episodes/siege3-skills.js';
 import { newWave, answer, plateOf, front } from './game/siege.js';
-import { drawSiege, squareX, GLYPH, SIEGE_W, SIEGE_H } from './game/drawsiege.js';
+import { drawSiege, squareX, SIEGE_W, SIEGE_H } from './game/drawsiege.js';
 import { paras, lines, button, optionList, shuffled, radios, TESTER, post, newSid, cleanup, onCleanup, notesScreen, footer, typedPanel, reflect, matchForm, noteLabel } from './lib.js';
 import { today, loadLog, recordAttempt, status, visibleMs } from './mastery.js';
 
@@ -238,8 +238,9 @@ function corridor(/** @type {{lane: number, shutters: number, sockets?: number[]
   canvas.width = SIEGE_W * dpr;
   canvas.height = SIEGE_H * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const from = slideFrom;
-  const draw = (/** @type {number} */ t, /** @type {number} */ now) => drawSiege(ctx, S.w, S.towers, { ...o, target: S.target, from, t, now });
+  // What to draw is fixed now: this picture belongs to this screen, whatever the game does next.
+  const from = slideFrom, wave = S.w, towers = S.towers, target = S.target;
+  const draw = (/** @type {number} */ t, /** @type {number} */ now) => drawSiege(ctx, wave, towers, { ...o, target, from, t, now });
   draw(from ? 0 : 1, 0);
   if (typeof requestAnimationFrame === 'undefined') return canvas;
   let raf = 0, alive = true, t0 = 0;
@@ -333,7 +334,7 @@ function scoutScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, 
       <p>${rec.wrong.length ? 'The scout shakes itself and shows a new plate.' : S.sc.i === 0
     ? 'A scout drifts in ahead of the rest. Wrench drops a mop bucket over it. "Practice on this one," she says. "It is not going anywhere, and it does not count."'
     : 'Wrench has the next scout under the bucket already.'}</p>
-      <div class="ask">${p.skill === 'frac' ? `Work out ${p.ask}` : p.ask}</div><p class="hint">Work it out on paper first, then choose.</p>`;
+      <div class="ask">${p.ask}</div><p class="hint">Work it out on paper first, then choose.</p>`;
     const list = optionList(p.options);
     for (const o of shuffled(p.options)) {
       list.append(button(o.html, () => {
@@ -404,6 +405,8 @@ function cartScreen(/** @type {HTMLElement} */ main, /** @type {string} */ flash
 function deal() {
   for (const d of S.w.drones) if (!d.ref) { const pl = plateOf(d); d.ref = take(pl.skill, pl.form); }
 }
+/** What a plate is about, in a word, for the buttons under the picture. */
+const KIND = { dist: 'brackets', solve: 'equation', simplify: 'root', rationalize: 'root below', frac: 'fractions' };
 const EVENT = {
   down: 'Solved. The drone folds up.', crack: 'One plate down. The Chairman shows the next.', blown: 'The fan blows one back.',
   held: 'One is stuck on the glue.', breach: 'One reached the trophy case. A shutter comes down.',
@@ -442,7 +445,7 @@ function waveScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, /
     chips.className = 'chips';
     for (const d of [...w.drones].sort((a, b) => a.pos - b.pos || a.id - b.id)) {
       const left = d.plates.length - d.at;
-      chips.append(button(`<b>${GLYPH[plateOf(d).skill]}</b>${d.boss ? ` &times;${left}` : ''} &middot; ${d.pos} away`, () => pick(d.id), d.id === aim.id ? 'chip on' : 'chip'));
+      chips.append(button(`<b>${KIND[/** @type {keyof typeof KIND} */ (plateOf(d).skill)]}</b>${d.boss ? ` &times;${left}` : ''} &middot; ${d.pos} away`, () => pick(d.id), d.id === aim.id ? 'chip on' : 'chip'));
     }
     const note = document.createElement('div');
     note.innerHTML = nearNote(aim.ref);
@@ -564,7 +567,7 @@ export function previews() {
   const w3 = mid([{ skill: 'frac', form: 0 }, { skill: 'frac', form: 1 }, { skill: 'frac', form: 0 }]);
   const f3 = at((s) => s.t === 'wave' && s.wi === 2);
   out.push({ name: 'e3-wave-frac', patch: { ...base, waves, step: f3, w: w3, target: 1 }, fill: true });
-  out.push({ name: 'e3-wave-frac-miss', patch: { ...base, waves, step: f3, sub: 'miss', w: w3, target: 2, typed: [{}], miss: { ref: ref('frac', 1, 1), ti: 0, id: 'o1', got: P(ref('frac', 1, 1)).gotHtml([3, 9]), slip: P(ref('frac', 1, 1)).options[1].slip } } });
+  out.push({ name: 'e3-wave-frac-miss', patch: { ...base, waves, step: f3, sub: 'miss', w: w3, target: 2, typed: [{}], miss: { ref: ref('frac', 1, 1), ti: 0, id: 'o1', got: P(ref('frac', 1, 1)).options[1].html, slip: P(ref('frac', 1, 1)).options[1].slip } } });
   const boss = { id: 7, boss: true, at: 1, pos: 5, held: 0, glued: [], ref: ref('rationalize', 1), plates: [{ skill: 'solve', form: 2 }, { skill: 'rationalize', form: 1 }, { skill: 'simplify', form: 1 }] };
   const w4 = mid([{ skill: 'simplify', form: 1 }, { skill: 'rationalize', form: 1 }], { queue: [] });
   w4.drones.push(/** @type {any} */ (boss));

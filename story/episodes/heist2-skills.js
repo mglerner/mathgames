@@ -17,6 +17,8 @@ const B = (x) => `<mark class="bad">${x}</mark>`;
 const G = (x) => `<mark class="good">${x}</mark>`;
 const A = (x) => ` <span class="ann">${x}</span>`;
 const T = '&times;';
+/** The instruction, on its own line above the math, so "Expand 3 - 2(...)" cannot be read as "Expand 3". */
+const DO = (x) => `<span class="do">${x}</span>`;
 /** Plain-text math to display math: proper minus signs. */
 const h = (s) => String(s).replace(/-/g, M);
 const sx = (c) => (c === 1 ? 'x' : c === -1 ? '-x' : `${c}x`);
@@ -109,7 +111,7 @@ function dist([c, m, p, q]) {
   const options = finish(opts, (o) => o.vals.join(','));
   return {
     askTxt: expr, ansTxt: lin(a, b),
-    ask: `Expand <span class="nw">${h(expr)}</span>`, show: `<span class="nw">${h(expr)}</span>`,
+    ask: `${DO('Expand')}<span class="nw">${h(expr)}</span>`, show: `<span class="nw">${h(expr)}</span>`,
     typed: `<span class="nw">${h(expr)}</span> <span class="nw">= {0}<span class="xvar">x</span>{s1}{1}</span>`,
     typedHint: 'Type the number in front of x. Then choose + or &minus; for the second term (tap the &plusmn;, or use the +/&minus; key) and type the plain number.',
     boxes: 2, signed: [1], neg: true, answer: [a, b], options, worked,
@@ -284,7 +286,7 @@ function simplify([s, m]) {
   const options = finish(opts, (q) => q.num.toFixed(6));
   return {
     askTxt: `sqrt(${N})`, ansTxt: rtT(s, m),
-    ask: `Simplify ${R(N)}`, show: R(N),
+    ask: `${DO('Simplify')}${R(N)}`, show: R(N),
     typed: `<span class="nw">${R(N)} = {0}${R('{1}')}</span>`,
     typedHint: 'First box: the number outside the root. Second box: what stays under it.',
     boxes: 2, answer: [s, m], options,
@@ -341,7 +343,7 @@ function rationalize([q, b, m]) {
   const options = finish(opts, (k) => k.num.toFixed(6));
   return {
     askTxt: `${a}/${botT}`, ansTxt: rtT(q, m),
-    ask: `Rewrite ${F(a, bot)} with no root on the bottom.`, show: F(a, bot),
+    ask: `${DO('Rewrite with no root on the bottom')}${F(a, bot)}`, show: F(a, bot),
     typed: `<span class="nw">${F(a, bot)} = {0}${R('{1}')}</span>`,
     typedHint: 'First box: the number outside the root. Second box: what is under it.',
     boxes: 2, answer: [q, m], options,
@@ -412,4 +414,4 @@ export function problem(skill, form, n) {
 }
 
 // Shared with later episodes' problem generators.
-export { B, G, A, T, h, red, shuffle, finish, near, range, cross, enough };
+export { B, G, A, T, DO, h, red, shuffle, finish, near, range, cross, enough };
