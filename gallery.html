@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Math Render Gallery</title>
+<!--
+  M4 layout check page (DESIGN.md section 9 and 12, M4). Serve the repo root
+  over HTTP (ES modules do not load from file://), e.g.
+      node scripts/serve.js        or   python3 -m http.server 8000
+  and open /gallery.html. It renders:
+    1. a hand-built table of ASTs and equations,
+    2. random ASTs from test/render/arb.js (seeded, reproducible),
+    3. every generator in src/gen/registry.generated.js, if that file exists
+       and is non-empty at load time (prompts, twins, choices, answers, steps),
+  each inside a 375px-wide frame (16px gutters, so 343px for the math). Red
+  outline = the math is wider than its frame (overflow). Amber = the width
+  estimator in mathdom.js under-reported the real one-line width (it must
+  never do that, or generators will let too-wide items through). Items the
+  estimator rejects are drawn in their own section and are allowed to
+  overflow there. The keypad panel at the bottom is live (tap or type).
+-->
+<style>
+:root {
+  --bg: #0b121b; --bg2: #111c28; --panel: #142231; --ink: #e6f1ff; --muted: #8aa0b6; --line: #26384b;
+  --glow: #5ff3ff; --bad: #ff4d6d; --warn: #ffb547; --ok: #7dffb0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, "Helvetica Neue", system-ui, sans-serif; }
+body { padding: 16px; }
+h1 { font-size: 20px; margin: 0 0 8px; letter-spacing: 0.04em; }
+h2 { font-size: 16px; margin: 28px 0 8px; color: var(--glow); letter-spacing: 0.06em; }
+p.note { color: var(--muted); font-size: 13px; max-width: 60em; margin: 4px 0; }
+#summary { position: sticky; top: 0; z-index: 5; background: var(--bg2); border: 1px solid var(--line); padding: 8px 12px; display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 14px; }
+#summary .bad { color: var(--bad); font-weight: 700; }
+#summary .warn { color: var(--warn); font-weight: 700; }
+#summary .ok { color: var(--ok); font-weight: 700; }
+.ctl { min-height: 36px; padding: 0 12px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; font: inherit; font-size: 13px; cursor: pointer; }
+.ctl.on { border-color: var(--glow); color: var(--glow); }
+.grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.frame { width: 375px; flex: none; padding: 8px 16px; background: var(--bg2); border: 1px solid var(--line); position: relative; }
+.frame .lab { font-size: 11px; color: var(--muted); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.frame .box { width: 100%; min-height: 40px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.frame .box > .m, .frame .box > .mlist { font-size: 24px; }
+.frame .meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.frame.overflow { outline: 3px solid var(--bad); outline-offset: -1px; }
+.frame.overflow .meta { color: var(--bad); font-weight: 700; }
+.frame.under { box-shadow: inset 0 0 0 3px var(--warn); }
+.frame.err { outline: 3px dashed var(--bad); }
+.frame.err .box { font-size: 13px; color: var(--bad); white-space: pre-wrap; }
+body.failsonly .frame:not(.overflow):not(.under):not(.err) { display: none; }
+#measure { position: absolute; left: -10000px; top: 0; visibility: hidden; font-size: 24px; white-space: nowrap; }
+#measure .meq, #measure .mlist { flex-wrap: nowrap; max-width: none; }
+/* keypad panel and phone frames */
+.phones { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.phone { flex: none; border: 2px solid var(--line); background: var(--bg); display: flex; flex-direction: column; position: relative; }
+.phone .cap { position: absolute; top: -18px; left: 0; font-size: 11px; color: var(--muted); }
+.phone .z-math { flex: 0 0 45%; display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; border-bottom: 1px dashed var(--line); padding: 0 16px; overflow: hidden; }
+.phone .z-inst { flex: 0 0 15%; display: flex; align-items: center; justify-content: center; border-bottom: 1px dashed var(--line); color: var(--muted); font-size: 12px; }
+.phone .z-input { flex: 0 0 40%; padding: 4px 16px; overflow: hidden; display: flex; flex-direction: column; }
+.phone .z-input .kp { flex: 1 1 auto; min-height: 0; }
+.phone.clipped { outline: 3px solid var(--bad); }
+.phone .z-math .m { font-size: 24px; }
+.kpinfo { font: 12px ui-monospace, Menlo, monospace; color: var(--muted); white-space: pre-wrap; word-break: break-all; margin-top: 8px; max-width: 375px; }
+</style>
+</head>
+<body>
+<h1>Math render gallery (M4)</h1>
+<p class="note">Every item sits in a 375px frame with 16px gutters. <b style="color:var(--bad)">Red outline</b>: the math overflows its frame. <b style="color:var(--warn)">Amber</b>: the measured one-line width is larger than estimateWidth() said (the estimator must be an over-estimate). Dashed red: rendering threw. Hover an item for its ASCII form.</p>
+<div id="summary"><span id="sumtext">loading...</span>
+  <button class="ctl" id="failsonly" type="button">show only failures</button>
+  <button class="ctl" id="rerun" type="button">re-measure</button>
+</div>
+
+<h2>1. Hand-built table</h2>
+<div class="grid" id="hand"></div>
+
+<h2>2. Random ASTs (seeded: test/render/arb.js, seeds gallery0...)</h2>
+<div class="grid" id="random"></div>
+
+<h2>3. Generator registry</h2>
+<p class="note" id="regnote">checking src/gen/registry.generated.js ...</p>
+<div class="grid" id="registry"></div>
+
+<h2>4. Rejected by the width estimator (allowed to overflow; red here is expected)</h2>
+<p class="note">Generators would refuse these at 24px. Items here that do NOT overflow show how conservative the estimate is.</p>
+<div class="grid" id="rejected"></div>
+
+<h2>5. Keypad</h2>
+<p class="note">Tap keys (pointerdown) or type: digits and + - / ^ ( ) = , ; declared letters; <code>s</code>, <code>\</code> or <code>#</code> for sqrt; <code>~</code> plus-minus; <code>[</code> no solution; <code>]</code> all reals; Backspace; Enter logs the answer.</p>
+<div id="kpcontrols" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+<div class="phones" id="kpphones"></div>
+<div class="kpinfo" id="kpinfo"></div>
+
+<h2>6. Phone layout 45 / 15 / 40</h2>
+<p class="note">The math zone, the instrument zone and the input zone at common iPhone viewport sizes, with the live preview placed under the math (five rows of 48px keys plus a preview do not fit a 40% zone on a 375 x 667 screen). env(safe-area-inset-*) is not emulated here: a 34px bottom pad stands in for the home indicator. A red outline means the keypad does not fit its 40% zone; the Safari-with-toolbars frame is expected to clip (the game runs as a home-screen app).</p>
+<div class="phones" id="layouts"></div>
+
+<div id="measure"></div>
+
+<script type="module">
+import { renderMath, renderList, estimateWidth, fitsDisplay, MATH_CSS, DISPLAY_CAP_PX, DEFAULT_MATH_PX } from './src/render/mathdom.js';
+import { mountKeypad, KEYPAD_CSS } from './src/render/keypad.js';
+import { materialize } from './src/render/vnode.js';
+import { num, v, add, mul, neg, frac, pow, sqrt, root, group, eq, sub } from './src/math/ast.js';
+import { parse } from './src/math/parse.js';
+import { print } from './src/math/print.js';
+import { surdToNode } from './src/math/surd.js';
+import { makeRng } from './src/gen/prng.js';
+import { randomMath } from './test/render/arb.js';
+
+const style = document.createElement('style');
+style.textContent = MATH_CSS + KEYPAD_CSS;
+document.head.appendChild(style);
+
+const $ = (id) => document.getElementById(id);
+const P = (t) => { const r = parse(t); if ('error' in r) throw new Error(`parse ${t}: ${r.error}`); return r; };
+
+/** All rendered frames: { el, x, kind } */
+const items = [];
+
+function frameFor(label, render, x, opts = {}) {
+  const fr = document.createElement('div');
+  fr.className = 'frame';
+  const lab = document.createElement('div');
+  lab.className = 'lab';
+  lab.textContent = label;
+  const box = document.createElement('div');
+  box.className = 'box';
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  fr.append(lab, box, meta);
+  try {
+    box.appendChild(materialize(document, render()));
+    try { fr.title = Array.isArray(x) ? x.map(print).join(', ') : print(x); } catch {}
+  } catch (err) {
+    fr.classList.add('err');
+    box.textContent = String(err && err.stack || err);
+  }
+  items.push({ el: fr, box, meta, x, list: !!opts.list });
+  return fr;
+}
+
+/** Add one Node / Equation, routed to `target` or to the rejected section. */
+function addMath(target, label, x) {
+  let fits = true;
+  try { fits = fitsDisplay(x); } catch {}
+  const dest = fits ? target : $('rejected');
+  dest.appendChild(frameFor(label, () => renderMath(x), x));
+}
+
+// ---------------------------------------------------------------- 1. hand table
+const H = $('hand');
+const hand = [
+  ['4 x 1/3 (teacher example)', mul(num(4), frac(num(1), num(3)))],
+  ['sqrt3 sqrt3 (teacher example)', mul(sqrt(num(3)), sqrt(num(3)))],
+  ['6/sqrt3 (teacher example)', frac(num(6), sqrt(num(3)))],
+  ['6 + 4x = 2x^2 (teacher example)', P('6 + 4x = 2x^2')],
+  ['4 + 4x = 2x^2 (teacher example d3)', P('4 + 4x = 2x^2')],
+  ['2x', mul(num(2), v('x'))],
+  ['2 sqrt(3)', mul(num(2), sqrt(num(3)))],
+  ['3(x + 1)', mul(num(3), add(v('x'), num(1)))],
+  ['2 . 3', mul(num(2), num(3))],
+  ['x . 2', mul(v('x'), num(2))],
+  ['2 . 1/3 (no mixed-number look)', mul(num(2), num(1, 3))],
+  ['(1/2)x', mul(frac(num(1), num(2)), v('x'))],
+  ['x(-y)', mul(v('x'), neg(v('y')))],
+  ['-2x stored as (-2)x', mul(num(-2), v('x'))],
+  ['x + (-3) stored', add(v('x'), num(-3))],
+  ['a - (b + c)', sub(v('a'), add(v('b'), v('c')))],
+  ['-(-x)', neg(neg(v('x')))],
+  ['(a + b)(c + d)', mul(add(v('a'), v('b')), add(v('c'), v('d')))],
+  ['(x + 1)/2 with group', frac(group(add(v('x'), num(1))), num(2))],
+  ['nested fraction', frac(frac(v('a'), v('b')), frac(v('c'), v('d')))],
+  ['deep fraction', frac(num(1), add(num(1), frac(num(1), add(num(1), frac(num(1), v('x'))))))],
+  ['x^2', pow(v('x'), num(2))],
+  ['x^(1/2) rational power', pow(v('x'), num(1, 2))],
+  ['x^(-2)', pow(v('x'), neg(num(2)))],
+  ['(-2)^2', pow(num(-2), num(2))],
+  ['-2^2', neg(pow(num(2), num(2)))],
+  ['(x^2)^3', pow(pow(v('x'), num(2)), num(3))],
+  ['x^(2^3)', pow(v('x'), pow(num(2), num(3)))],
+  ['(1/2)^3', pow(num(1, 2), num(3))],
+  ['(sqrt x)^2', pow(sqrt(v('x')), num(2))],
+  ['x^(n+1)', pow(v('x'), group(add(v('n'), num(1))))],
+  ['9^(1/2) typed', P('9^(1/2)')],
+  ['sqrt(x + 1)', sqrt(add(v('x'), num(1)))],
+  ['sqrt over a fraction (hook stretches)', sqrt(frac(v('x'), num(2)))],
+  ['sqrt over a tall fraction', sqrt(frac(add(v('x'), num(1)), add(v('x'), num(-1))))],
+  ['nested radicals', sqrt(add(num(2), sqrt(add(num(2), sqrt(num(2))))))],
+  ['sqrt(x^2)', sqrt(pow(v('x'), num(2)))],
+  ['cube root (index shown)', root(3, num(8))],
+  ['(1 + sqrt5)/2', frac(add(num(1), sqrt(num(5))), num(2))],
+  ['rationalize: 6/sqrt3 = 2sqrt3', eq(frac(num(6), sqrt(num(3))), mul(num(2), sqrt(num(3))))],
+  ['2/(3 - sqrt2)', frac(num(2), sub(num(3), sqrt(num(2))))],
+  ['quadratic formula', P('x = (-b + sqrt(b^2 - 4ac))/(2a)')],
+  ['literal eq l = A/w', eq(v('l'), frac(v('A'), v('w')))],
+  ['P = 2l + 2w', P('P = 2l + 2w')],
+  ['WMmw width test', mul(v('W'), v('M'), v('m'), v('w'))],
+  ['big digits', num(1234567890)],
+  ['long sum (wraps? no: no "=")', P('x^4 + 4x^3 + 6x^2 + 4x + 1')],
+  ['long equation (wraps at =)', P('3x^2 + 12x + 7 - 5 = 2x^2 - 9x + 14')],
+  ['very long equation', P('12x^3 + 15x^2 - 9x + 4 = 7x^3 - 6x^2 + 11x - 20')],
+  ['fraction equation', P('x/3 + 1/2 = 5/6')],
+  ['identity coin: 3/3', frac(num(3), num(3))],
+  ['zero pair: x + 2 - 2', P('x + 2 - 2')],
+  ['negative fraction', num(-3, 4)],
+  ['frac with negative numerator', frac(neg(num(3)), num(4))],
+  ['-(3/4)', neg(frac(num(3), num(4)))],
+  ['groups kept', P('(3)(4) + (x)')],
+  ['empty add / mul', add(add(), mul())],
+  ['sqrt letters (s q r t)', mul(v('s'), v('q'), v('r'), v('t'))],
+  ['product with powers', P('2x^2y^3z')],
+  ['complete the square', P('(x + 3)^2 - 9 = 0')],
+];
+for (const [label, x] of hand) addMath(H, label, x);
+// The keypad preview mode on a few readings.
+for (const t of ['1/2x', 'a/bc', '-x^2', '-3^2x', '1/2/3', 'sqrt3x', '(x+1)/2']) {
+  const x = P(t);
+  H.appendChild(frameFor(`preview of typed "${t}"`, () => renderMath(x, { preview: true }), x));
+}
+H.appendChild(frameFor('solution list', () => renderList([P('x = 1 + sqrt(3)'), P('x = 1 - sqrt(3)')], { preview: true }), [P('x = 1 + sqrt(3)'), P('x = 1 - sqrt(3)')], { list: true }));
+
+// ---------------------------------------------------------------- 2. random
+const R = $('random');
+for (let i = 0; i < 300; i++) {
+  const rng = makeRng(`gallery${i}`);
+  const x = randomMath(rng, rng.int(1, 4));
+  addMath(R, `random gallery${i}`, x);
+}
+
+// ---------------------------------------------------------------- 3. registry
+async function loadRegistry() {
+  const note = $('regnote');
+  let mod;
+  try {
+    mod = await import('./src/gen/registry.generated.js');
+  } catch (err) {
+    note.textContent = `registry not loaded (${err && err.message}); run node scripts/gen-registry.js. Sections 1-2 still test the renderer.`;
+    return;
+  }
+  const gens = mod.generators || [];
+  if (gens.length === 0) { note.textContent = 'registry is empty at load time: no generators to render yet.'; return; }
+  note.textContent = `${gens.length} generator(s): ${gens.map((g) => g.id).join(', ')}. 3 seeds x each difficulty x each interaction.`;
+  const G = $('registry');
+  const asMath = (d) => {
+    if (!d || typeof d !== 'object') return undefined;
+    if (d.t) return d; // Node or Equation
+    if (d.kind === 'finite') return { list: d.roots.map(surdToNode) };
+    if (d.kind === 'none') return { word: 'no solution' };
+    if (d.kind === 'all') return { word: 'all reals' };
+    if (d.op) return d.operand ? { move: d.op, operand: d.operand } : { word: d.op };
+    if (Array.isArray(d)) return { list: d };
+    return undefined;
+  };
+  const show = (label, d) => {
+    const m = asMath(d);
+    if (!m) return;
+    if (m.t) addMath(G, label, m);
+    else if (m.list) G.appendChild(frameFor(label, () => renderList(m.list), m.list, { list: true }));
+    else if (m.move) addMath(G, `${label} (${m.move})`, m.operand);
+    else if (m.word) G.appendChild(frameFor(label, () => ({ tag: 'span', attrs: { class: 'm' }, children: [m.word] }), null, { list: true }));
+  };
+  for (const g of gens) {
+    const [lo, hi] = g.difficulty || [1, 1];
+    for (let d = lo; d <= hi; d++) for (const inter of g.interactions || []) for (let s = 0; s < 3; s++) {
+      const tag = `${g.id} d${d} ${inter} s${s}`;
+      let p;
+      try {
+        p = g.generate(makeRng(`gallery:${g.id}:${d}:${inter}:${s}`), { difficulty: d, interaction: inter, fadeLevel: 0 });
+      } catch (err) {
+        G.appendChild(frameFor(`${tag}: generate() threw`, () => { throw err; }, null));
+        continue;
+      }
+      show(`${tag} prompt`, p.prompt && p.prompt.math);
+      if (p.prompt && p.prompt.twin) show(`${tag} twin`, p.prompt.twin);
+      if (p.prompt && p.prompt.move) show(`${tag} move`, p.prompt.move);
+      for (const c of p.choices || []) show(`${tag} choice ${c.id} [${c.verdict}]`, c.display);
+      if (p.answer) show(`${tag} answer`, p.answer.expected);
+      for (const [i, st] of (p.steps || []).entries()) show(`${tag} step ${i}`, st.line);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- measuring
+function measure() {
+  const M = $('measure');
+  let over = 0, under = 0, errs = 0, total = 0, rejOver = 0, rejFit = 0, maxRatio = 0, minRatio = Infinity;
+  for (const it of items) {
+    const { el, box, meta, x } = it;
+    total++;
+    el.classList.remove('overflow', 'under');
+    if (el.classList.contains('err')) { errs++; continue; }
+    const math = box.firstElementChild;
+    const br = box.getBoundingClientRect();
+    let wide = box.scrollWidth > box.clientWidth + 1;
+    for (const e of [math, ...math.querySelectorAll('.mside, .m')]) {
+      const r = e.getBoundingClientRect();
+      if (r.left < br.left - 0.5 || r.right > br.right + 0.5) wide = true;
+    }
+    // One-line natural width, measured off-screen.
+    let est = '';
+    if (!it.list && x && x.t) {
+      const clone = math.cloneNode(true);
+      M.appendChild(clone);
+      const real = clone.getBoundingClientRect().width;
+      M.removeChild(clone);
+      const e = estimateWidth(x, { fontPx: DEFAULT_MATH_PX }).oneLine;
+      const ratio = real / e;
+      maxRatio = Math.max(maxRatio, ratio); minRatio = Math.min(minRatio, ratio);
+      est = `one line: real ${real.toFixed(0)}px, estimate ${e.toFixed(0)}px (real/est ${ratio.toFixed(2)})`;
+      if (real > e + 0.5) { el.classList.add('under'); under++; }
+    }
+    const rejected = el.parentElement && el.parentElement.id === 'rejected';
+    if (wide) {
+      if (rejected) rejOver++;
+      else { over++; el.classList.add('overflow'); }
+    } else if (rejected) rejFit++;
+    meta.textContent = `${wide ? 'OVERFLOW. ' : ''}${est}`;
+  }
+  const cls = (n, bad) => (n ? bad : 'ok');
+  $('sumtext').innerHTML =
+    `${total} items. <span class="${cls(over, 'bad')}">${over} overflow</span>` +
+    ` <span class="${cls(under, 'warn')}">${under} estimator under-reports</span>` +
+    ` <span class="${cls(errs, 'bad')}">${errs} render errors</span>` +
+    ` | rejected by estimator: ${rejOver} overflow, ${rejFit} would have fit` +
+    ` | real/estimate ${isFinite(minRatio) ? minRatio.toFixed(2) : '-'} .. ${maxRatio.toFixed(2)}` +
+    ` | cap ${DISPLAY_CAP_PX}px at ${DEFAULT_MATH_PX}px`;
+}
+
+$('failsonly').addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  document.body.classList.toggle('failsonly');
+  $('failsonly').classList.toggle('on');
+});
+$('rerun').addEventListener('pointerdown', (e) => { e.preventDefault(); measure(); });
+
+// ---------------------------------------------------------------- 5. keypad
+const VARSETS = [['x'], ['x', 'y'], ['l', 'w', 'A'], ['a', 'b', 'c', 'd'], []];
+const MODES = ['single', 'solutions', 'list'];
+let varset = VARSETS[0], mode = MODES[0], kp = null;
+const log = [];
+function mountPanel() {
+  const host = $('kpphones');
+  host.textContent = '';
+  const phone = document.createElement('div');
+  phone.className = 'phone';
+  phone.style.width = '375px';
+  phone.style.height = '400px';
+  const zone = document.createElement('div');
+  zone.className = 'z-input';
+  zone.style.flex = '1 1 auto';
+  phone.appendChild(zone);
+  host.appendChild(phone);
+  if (kp) kp.destroy();
+  kp = mountKeypad(document, zone, {
+    variableKeys: varset, mode, keyboardTarget: window,
+    onChange: ({ tokens, text, reading }) => {
+      let read = reading.status;
+      if (reading.status === 'read') read += ': ' + reading.items.map(print).join(', ');
+      if (reading.status === 'unread') read += ': ' + reading.error;
+      if (reading.status === 'word') read += ': ' + reading.word;
+      $('kpinfo').textContent = `tokens ${JSON.stringify(tokens)}\nraw    ${JSON.stringify(text).replace(/[\u0080-\uffff]/g, (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'))}\nreading ${read}\nentered ${JSON.stringify(log)}`;
+    },
+    onEnter: (t) => { log.push(t); if (kp) kp.clear(); },
+  });
+}
+function controls() {
+  const c = $('kpcontrols');
+  c.textContent = '';
+  const btn = (text, on, fn) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ctl' + (on ? ' on' : ''); b.textContent = text;
+    b.addEventListener('pointerdown', (e) => { e.preventDefault(); fn(); controls(); mountPanel(); });
+    c.appendChild(b);
+  };
+  for (const vs of VARSETS) btn(`vars [${vs.join(' ')}]`, vs === varset, () => { varset = vs; });
+  for (const m of MODES) btn(`read as ${m}`, m === mode, () => { mode = m; });
+}
+controls();
+mountPanel();
+
+// ---------------------------------------------------------------- 6. phone layouts
+// [label, width, height, bottom safe-area inset (home indicator)]
+const PHONES = [['iPhone SE standalone (375 x 667)', 375, 667, 0], ['iPhone 13 mini (375 x 812)', 375, 812, 34], ['iPhone 14 (390 x 844)', 390, 844, 34], ['Safari SE with toolbars (375 x 548)', 375, 548, 0]];
+const L = $('layouts');
+const layoutChecks = [];
+for (const [name, w, hgt, inset] of PHONES) {
+  const ph = document.createElement('div');
+  ph.className = 'phone';
+  ph.style.width = `${w}px`; ph.style.height = `${hgt}px`; ph.style.marginTop = '20px';
+  ph.innerHTML = `<div class="cap">${name}</div><div class="z-math"></div><div class="z-inst">instrument (15%)</div><div class="z-input"></div>`;
+  const zm = ph.querySelector('.z-math');
+  zm.appendChild(materialize(document, renderMath(P('6 + 4x = 2x^2'))));
+  const pv = document.createElement('div');
+  pv.style.width = '100%';
+  zm.appendChild(pv);
+  ph.querySelector('.z-input').style.paddingBottom = `${4 + inset}px`;
+  L.appendChild(ph);
+  mountKeypad(document, ph.querySelector('.z-input'), { variableKeys: ['x', 'y', 'l', 'w'], previewContainer: pv });
+  layoutChecks.push(ph);
+}
+function checkLayouts() {
+  for (const ph of layoutChecks) {
+    const zone = ph.querySelector('.z-input');
+    const kpEl = zone.querySelector('.kp');
+    const clipped = kpEl.scrollHeight > kpEl.clientHeight + 1 || zone.scrollHeight > zone.clientHeight + 1;
+    ph.classList.toggle('clipped', clipped);
+    ph.querySelector('.cap').textContent = ph.querySelector('.cap').textContent.replace(/ -- .*$/, '') + (clipped ? ' -- KEYPAD CLIPPED' : ' -- fits');
+  }
+}
+
+await loadRegistry();
+try { await document.fonts.ready; } catch {}
+requestAnimationFrame(() => requestAnimationFrame(() => { measure(); checkLayouts(); }));
+window.addEventListener('resize', () => { measure(); checkLayouts(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+{
+ "format": "keystone-proto-log",
+ "v": 1,
+ "build": "proto-0.5.0",
+ "device": "076cd1369b0065ca",
+ "events": [
+  {
+   "id": "01M73XAC405J8ZCPY04P5EYN5S",
+   "v": 1,
+   "t": "2026-11-10T23:40:00.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "session-start",
+   "data": {
+    "runSeed": "fixture-0",
+    "queue": [
+     "ftw:parent-85:nextline",
+     "sqrtsq:parent-5:strike",
+     "rat:parent-15:forge",
+     "quad:parent-998:strike"
+    ]
+   }
+  },
+  {
+   "id": "01M73XAZN0A6V1Q0759AQH8YEY",
+   "v": 1,
+   "t": "2026-11-10T23:40:20.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "attempt",
+   "data": {
+    "problem": {
+     "gen": "ftw",
+     "version": 1,
+     "seed": "parent-85",
+     "skill": "frac-times-whole",
+     "difficulty": 1,
+     "interaction": "nextline",
+     "constructed": false
+    },
+    "response": "x",
+    "verdict": "correct",
+    "firstTry": true,
+    "hintsUsed": 0,
+    "fadeLevel": 0,
+    "evidence": false,
+    "context": "mixed",
+    "misconceptions": [],
+    "ambiguous": false,
+    "ms": 15002
+   }
+  },
+  {
+   "id": "01M73XBK60EVDM198ADZA3K7G3",
+   "v": 1,
+   "t": "2026-11-10T23:40:40.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "attempt",
+   "data": {
+    "problem": {
+     "gen": "sqrtsq",
+     "version": 1,
+     "seed": "parent-5",
+     "skill": "sqrt-squared",
+     "difficulty": 1,
+     "interaction": "strike",
+     "constructed": true
+    },
+    "response": "9",
+    "verdict": "wrong",
+    "firstTry": true,
+    "hintsUsed": 0,
+    "fadeLevel": 0,
+    "evidence": false,
+    "context": "mixed",
+    "misconceptions": [
+     "root-square-overshoot"
+    ],
+    "ambiguous": false,
+    "ms": 15003
+   }
+  },
+  {
+   "id": "01M73XC6Q0KC06BJHFJKWNXGS8",
+   "v": 1,
+   "t": "2026-11-10T23:41:00.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "attempt",
+   "data": {
+    "problem": {
+     "gen": "rat",
+     "version": 1,
+     "seed": "parent-15",
+     "skill": "rationalize-denominator",
+     "difficulty": 1,
+     "interaction": "forge",
+     "constructed": false
+    },
+    "response": "x",
+    "verdict": "correct",
+    "firstTry": true,
+    "hintsUsed": 0,
+    "fadeLevel": 0,
+    "evidence": false,
+    "context": "mixed",
+    "misconceptions": [],
+    "ambiguous": false,
+    "ms": 15004
+   }
+  },
+  {
+   "id": "01M73XCT80R0JRNVTMQ4F87T2D",
+   "v": 1,
+   "t": "2026-11-10T23:41:20.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "attempt",
+   "data": {
+    "problem": {
+     "gen": "quad",
+     "version": 1,
+     "seed": "parent-998",
+     "skill": "quadratic-to-standard",
+     "difficulty": 1,
+     "interaction": "strike",
+     "constructed": true
+    },
+    "response": "x",
+    "verdict": "correct",
+    "firstTry": true,
+    "hintsUsed": 0,
+    "fadeLevel": 0,
+    "evidence": false,
+    "context": "mixed",
+    "misconceptions": [],
+    "ambiguous": false,
+    "ms": 15005
+   }
+  },
+  {
+   "id": "01M73XCT80WN5AY53SVS1TG3BJ",
+   "v": 1,
+   "t": "2026-11-10T23:41:20.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "report",
+   "data": {
+    "gen": "rat",
+    "version": 1,
+    "seed": "parent-15",
+    "interaction": "forge",
+    "build": "proto-0.5.0"
+   }
+  },
+  {
+   "id": "01M73XCZ4819QX8ECY0DMCTCMQ",
+   "v": 1,
+   "t": "2026-11-10T23:41:25.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "session-end",
+   "data": {
+    "runSeed": "fixture-0",
+    "knots": 4,
+    "echoes": 0,
+    "misses": 1,
+    "firstTryCorrect": 3
+   }
+  },
+  {
+   "id": "01M76MJQK05YAFJQP3526Z4NXW",
+   "v": 1,
+   "t": "2026-11-12T01:05:00.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "session-start",
+   "data": {
+    "runSeed": "fixture-1",
+    "queue": [
+     "ftw:parent-85:nextline",
+     "sqrtsq:parent-5:strike",
+     "rat:parent-15:forge",
+     "quad:parent-998:strike"
+    ]
+   }
+  },
+  {
+   "id": "01M76MKB40AJWHX0Z89PS1EZ71",
+   "v": 1,
+   "t": "2026-11-12T01:05:20.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "attempt",
+   "data": {
+    "problem": {
+     "gen": "ftw",
+     "version": 1,
+     "seed": "parent-85",
+     "skill": "frac-times-whole",
+     "difficulty": 1,
+     "interaction": "nextline",
+     "constructed": false
+    },
+    "response": "x",
+    "verdict": "correct",
+    "firstTry": true,
+    "hintsUsed": 0,
+    "fadeLevel": 0,
+    "evidence": false,
+    "context": "mixed",
+    "misconceptions": [],
+    "ambiguous": false,
+    "ms": 15009
+   }
+  },
+  {
+   "id": "01M76MKYN0F7F47A0DEBBKS886",
+   "v": 1,
+   "t": "2026-11-12T01:05:40.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "attempt",
+   "data": {
+    "problem": {
+     "gen": "sqrtsq",
+     "version": 1,
+     "seed": "parent-5",
+     "skill": "sqrt-squared",
+     "difficulty": 1,
+     "interaction": "strike",
+     "constructed": true
+    },
+    "response": "x",
+    "verdict": "correct",
+    "firstTry": true,
+    "hintsUsed": 0,
+    "fadeLevel": 0,
+    "evidence": false,
+    "context": "mixed",
+    "misconceptions": [],
+    "ambiguous": false,
+    "ms": 15010
+   }
+  },
+  {
+   "id": "01M76MMJ60KR1PHK9JJZY63HHB",
+   "v": 1,
+   "t": "2026-11-12T01:06:00.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "attempt",
+   "data": {
+    "problem": {
+     "gen": "rat",
+     "version": 1,
+     "seed": "parent-15",
+     "skill": "rationalize-denominator",
+     "difficulty": 1,
+     "interaction": "forge",
+     "constructed": false
+    },
+    "response": "x",
+    "verdict": "correct",
+    "firstTry": true,
+    "hintsUsed": 0,
+    "fadeLevel": 0,
+    "evidence": false,
+    "context": "mixed",
+    "misconceptions": [],
+    "ambiguous": false,
+    "ms": 15011
+   }
+  },
+  {
+   "id": "01M76MN5Q0RCM8VWJQQGGRDTTG",
+   "v": 1,
+   "t": "2026-11-12T01:06:20.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "attempt",
+   "data": {
+    "problem": {
+     "gen": "quad",
+     "version": 1,
+     "seed": "parent-998",
+     "skill": "quadratic-to-standard",
+     "difficulty": 1,
+     "interaction": "strike",
+     "constructed": true
+    },
+    "response": "x",
+    "verdict": "correct",
+    "firstTry": true,
+    "hintsUsed": 0,
+    "fadeLevel": 0,
+    "evidence": false,
+    "context": "mixed",
+    "misconceptions": [],
+    "ambiguous": false,
+    "ms": 15012
+   }
+  },
+  {
+   "id": "01M76MNAK8X16V45VWW53AP43N",
+   "v": 1,
+   "t": "2026-11-12T01:06:25.000Z",
+   "build": "proto-0.5.0",
+   "device": "076cd1369b0065ca",
+   "type": "session-end",
+   "data": {
+    "runSeed": "fixture-1",
+    "knots": 4,
+    "echoes": 0,
+    "misses": 0,
+    "firstTryCorrect": 4
+   }
+  }
+ ]
+}

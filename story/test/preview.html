@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screen previews</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  /* Each screen is drawn in a phone-width column (402px, an iPhone 17 Pro) with its name above it. */
+  body { font-size: 19px; }
+  #frames { display: flex; flex-wrap: wrap; gap: 20px; padding: 12px; align-items: flex-start; }
+  .frame { width: 402px; flex: none; outline: 1px dashed #555c6e; }
+  .frame > .name { font: 600 13px/1.6 -apple-system, system-ui, sans-serif; color: #14161c; background: #e2b65a; padding: 0 8px; }
+  .frame > .app { max-width: none; padding-bottom: 16px; }
+</style>
+</head>
+<body>
+<div id="frames"></div>
+<script type="module">
+  // Draws episode 2's screens side by side using the game's own code and stylesheet.
+  //   preview.html                 every screen
+  //   preview.html?names=a,b       just those (names come from previews() in ep2.js)
+  import { previews, renderPreview } from '../ep2.js';
+  const want = new URLSearchParams(location.search).get('names');
+  const pick = want ? want.split(',') : null;
+  const frames = document.getElementById('frames');
+  for (const pv of previews()) {
+    if (pick && !pick.includes(pv.name)) continue;
+    const frame = document.createElement('div');
+    frame.className = 'frame';
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = pv.name;
+    const app = document.createElement('div');
+    app.className = 'app';
+    frame.append(name, app);
+    frames.append(frame);
+    try { renderPreview(app, pv); } catch (e) { app.textContent = `PREVIEW FAILED: ${e && e.stack ? e.stack : e}`; }
+  }
+  document.title = `previews ready (${frames.children.length})`;
+</script>
+</body>
+</html>

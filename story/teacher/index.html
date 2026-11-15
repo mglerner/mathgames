@@ -1,0 +1,9 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>The Vark Job (teacher test)</title>
+<script>
+  // Marks this device as a teacher's test device, then opens the game.
+  // Reports sent from here are labelled as test runs from now on.
+  try { localStorage.setItem('story:tester', '1'); } catch (e) {}
+  location.replace('../');
+</script>

@@ -1,0 +1,18 @@
+# Generated registries (scripts/gen-registry.js) -- never committed
+*.generated.js
+
+# Build output and dependencies
+dist/
+node_modules/
+
+# Test scratch trees (created and removed by M0 script tests)
+test/data/.scratch-*/
+
+# OS cruft
+.DS_Store
+
+# Preview screenshots (story/test/shots.sh)
+story/test/shots/
+
+# Private material (a symlink into Dropbox): never committed
+/private

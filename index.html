@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Keystone">
+<meta name="theme-color" content="#0b1118">
+<meta name="format-detection" content="telephone=no">
+<title>Keystone Deep</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+:root { color-scheme: dark; }
+html, body { margin: 0; height: 100%; background: #0b1118; color: #d6e4f0; }
+body { font: 18px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+#app {
+  height: 100dvh; box-sizing: border-box; overflow-y: auto;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  touch-action: manipulation; overscroll-behavior: none;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.stub { padding: 16px; max-width: 32rem; margin: 0 auto; }
+.stub h1 { font-size: 28px; letter-spacing: 0.04em; color: #7fe3ff; }
+.stub .build { font-family: ui-monospace, Menlo, monospace; color: #8aa0b4; }
+.stub .status { padding-left: 1.2em; }
+.stub a { color: #7fe3ff; }
+.stub button { min-width: 48px; min-height: 48px; font: inherit; color: #d6e4f0; background: #142233;
+  border: 1px solid #2c4a66; border-radius: 4px; }
+.stub .code { font: 28px ui-monospace, Menlo, monospace; letter-spacing: 0.1em; margin: 8px 0; }
+.stub .pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 18rem; }
+.stub textarea { width: 100%; box-sizing: border-box; background: #0f1a26; color: #d6e4f0; user-select: text; -webkit-user-select: text; }
+</style>
+</head>
+<body>
+<div id="app"><p style="padding:16px">Loading Keystone Deep...</p></div>
+<noscript>This needs JavaScript.</noscript>
+<script type="module" src="src/app/boot.js"></script>
+</body>
+</html>

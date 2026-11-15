@@ -1,0 +1,11 @@
+{
+  "name": "keystone-deep",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node scripts/gen-registry.js && node --test \"test/**/*.test.js\"",
+    "audit": "node scripts/audit.js",
+    "serve": "node scripts/serve.js"
+  }
+}

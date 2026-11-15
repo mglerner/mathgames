@@ -1,0 +1,38 @@
+# Keystone Deep WEB-ROOT .htaccess (DESIGN.md section 11, "Service worker and updates").
+# Lives in api/ in the repo (the section 11 tree puts it there) but the build
+# copies it to the root of the app directory (dist/.htaccess), which is the web
+# root in production and staging/ in staging. An .htaccess applies to its
+# directory and every subdirectory, so this one also covers v/ and api/.
+# Nothing here names an absolute path: it works at / and at /staging/.
+# NOT VERIFIED on Dreamhost: that mod_headers honours Header, and that <If>
+# (Apache 2.4) is available. Deploy step 6 checks sw.js's Cache-Control.
+
+Options -Indexes
+DirectoryIndex index.html
+
+AddType application/manifest+json .webmanifest
+AddType text/javascript .js
+
+<IfModule mod_headers.c>
+  # Entry points: always revalidate, so a new deploy is seen at once.
+  <FilesMatch "^(sw\.js|index\.html|teacher\.html|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  # Versioned modules never change once uploaded.
+  <If "%{REQUEST_URI} =~ m#/v/[0-9a-f]{7,40}/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+  # API responses are never cached (the PHP also sends no-store).
+  <FilesMatch "\.php$">
+    Header set Cache-Control "no-store"
+  </FilesMatch>
+</IfModule>
+
+# lib.php is included, never requested.
+<Files "lib.php">
+  Require all denied
+</Files>
+# Never serve editor or lock leftovers.
+<FilesMatch "(\.(lock|tmp[0-9]*|bak|orig|swp)|~)$">
+  Require all denied
+</FilesMatch>

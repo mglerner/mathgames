@@ -1,0 +1,7 @@
+# Make browsers check for a newer copy on every load, so an update to the game
+# shows up without anyone having to clear a cache. The files are tiny.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|css)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
