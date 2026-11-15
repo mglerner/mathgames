@@ -3,15 +3,18 @@
 // Remembers which one was open, so a reload lands back in the same place.
 import * as ep1 from './ep1.js';
 import * as ep2 from './ep2.js';
-import * as ep3 from './ep3.js';
+import * as ep3a from './ep3.js';
+import * as ep3b from './ep3.js?mode=live'; // the same file again, as its own copy: see MODE in ep3.js
 import { button, cleanup, TESTER } from './lib.js';
 
 const AT = 'story:at';
 const EPISODES = [
-  { id: 'pilot', n: 1, mod: ep1, blurb: 'Five locks. Get the school trophy back out of Vark Tower.' },
-  { id: 'heist2', n: 2, mod: ep2, blurb: 'Four floors, two chapters. Vark has dared you to come back for his own cup.' },
+  { id: 'pilot', n: '1', mod: ep1, blurb: 'Five locks. Get the school trophy back out of Vark Tower.' },
+  { id: 'heist2', n: '2', mod: ep2, blurb: 'Four floors, two chapters. Vark has dared you to come back for his own cup.' },
   // Episode 3 decides what to ask from how episode 2 went, so it waits for it (a teacher's test device does not).
-  { id: 'siege3', n: 3, mod: ep3, after: ep2, blurb: 'Vark comes to the school. His problems fly down the corridor at you. Stop them.' },
+  { id: 'siege3', n: '3a', mod: ep3a, after: ep2, afterN: '2', blurb: 'Vark comes to the school. His problems fly down the corridor at you. Stop them. No clock: they move when you answer.' },
+  // 3b is the same night as real-time tower defence, for speed on what 3a taught.
+  { id: 'siege3b', n: '3b', mod: ep3b, after: ep3a, afterN: '3a', blurb: 'The same night, at full speed. Build launchers, crack the plates, and be quick: this time they do not wait.' },
 ];
 const app = /** @type {HTMLElement} */ (document.getElementById('app'));
 
@@ -37,7 +40,7 @@ function show(/** @type {string | null} */ id) {
     if (e.after && !TESTER && e.after.summary() !== 'Finished') {
       const wait = document.createElement('p');
       wait.className = 'hint';
-      wait.textContent = `Opens when episode ${e.n - 1} is finished.`;
+      wait.textContent = `Opens when episode ${e.afterN} is finished.`;
       row.append(wait);
     } else row.append(button(`Play episode ${e.n}`, () => setAt(e.id)));
     main.append(row);

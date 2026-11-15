@@ -28,13 +28,12 @@ test('episode 3, live mode: full play-through', async () => {
   const pump = (secs) => { for (let i = 0; i < secs * 20; i++) { clock += 50; const q = queue; queue = []; for (const { f } of q) f(clock); } };
 
   const { content, TUNING } = await import('../episodes/siege3.js');
-  TUNING.mode = 'live';
   const L = TUNING.live;
   await import('../app.js');
   const { problem } = await import('../episodes/siege3-skills.js');
   const { reach } = await import('../game/live.js');
 
-  const st = () => JSON.parse(store['story:siege3:v1'] || '{}');
+  const st = () => JSON.parse(store['story:siege3b:v1'] || '{}');
   const main = () => appEl.children[1];
   const flat = (n) => [n, ...(n.children || []).flatMap(flat)];
   const btns = () => flat(appEl).filter((n) => n.tag === 'button');
@@ -80,7 +79,9 @@ test('episode 3, live mode: full play-through', async () => {
   };
   const buyLaunchers = () => { while (btns().some((b) => /^Ball launcher at spot/.test(b.innerHTML) && !b.disabled)) click(/^Ball launcher at spot/); };
 
-  click('Play episode 3');
+  assert.match(html(), /Episode 3b: Open House, Rush Hour/);
+  click('Play episode 3b');
+  assert.equal(store['story:at'], 'siege3b');
   assert.equal(st().mode ?? 'live', 'live');
   assert.match(html(), /slow to a crawl/);
   assert.doesNotMatch(html(), /one locker closer/);
@@ -215,7 +216,9 @@ test('episode 3, live mode: full play-through', async () => {
   formData = { feel: 'A game', pace: 'Fun: I liked the rush', next: '', broken: '' };
   click('Done');
   const rep = flat(main()).find((n) => n.tag === 'textarea').value;
+  assert.match(rep, /The Vark Job 3b \(Open House, Rush Hour\)/);
   assert.match(rep, /Corridor: live/);
+  assert.equal(store['story:siege3:v1'], undefined, 'episode 3a has its own saved game, untouched');
   assert.match(rep, /from opening the plate to pressing Enter/);
   assert.match(rep, /launcher at spot 4/);
   assert.match(rep, /time on a right answer in this episode: median/);

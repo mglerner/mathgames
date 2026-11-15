@@ -8,18 +8,16 @@
 //   A skill needs more practice than the game is giving      TUNING.force = { solve: 4 }
 //   A skill is done and should not come back                 TUNING.force = { simplify: 0 }
 //   Waves feel too tense / not tense enough                  TUNING.pack, TUNING.lane, TUNING.shutters (live mode: TUNING.live)
-//   Real-time tower defence instead of one step per answer   TUNING.mode = 'live'
-//   Live mode without time pressure on the math              TUNING.live.think = 0
+//   Episode 3b without time pressure on the math             TUNING.live.think = 0
 //   Add or drop a wave, or change which skills it reviews    the `waves` list
 //   A new skill                                              add it to siege3-skills.js, then name it in a wave's `fresh`
 export const TUNING = {
-  // How the corridor plays. Everything else about the episode (scouts, what a wave sends, the report) is the same.
-  //   'turns'  the drones step once per answer entered; one straight corridor
-  //   'live'   real time on a winding path: towers shoot, formations hide behind a plate, and
+  // The corridor plays two ways, and the menu offers each as its own episode. Everything else
+  // (scouts, what a wave sends, the report) is shared.
+  //   3a 'turns'  the drones step once per answer entered; one straight corridor
+  //   3b 'live'   real time on a winding path: towers shoot, formations hide behind a plate, and
   //            the corridor slows down (TUNING.live.think) while the keypad is open. This is the mode
   //            for speed: the scouts still teach untimed, and a miss is still explained untimed.
-  // A page opened with ?td=live or ?td=turns uses that mode for an episode started on it.
-  mode: 'turns',
   live: {
     size: 3, // drones in a formation (one plate per formation)
     hp: [4, 6, 7, 9], // hits a drone takes, by wave: later waves need more towers
@@ -57,7 +55,8 @@ export const TUNING = {
 export const content = {
   id: 'siege3',
   title: 'Open House',
-  // An entry that is {turns, live} is the paragraph for each way the corridor can play (TUNING.mode).
+  titleLive: 'Open House, Rush Hour',
+  // An entry that is {turns, live} is the paragraph for each way the corridor can play (episode 3a or 3b).
   intro: [
     `Three weeks of nothing. Then Dez turns up at lunch with a delivery note she should not have.`,
     `"Forty crates. Addressed to the school roof. Signed for by a 'Mr L. V. Arkwright', who does not exist." She puts it on the table. "He said next time he comes to us. It is next time."`,

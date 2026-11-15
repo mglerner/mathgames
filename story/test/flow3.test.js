@@ -82,8 +82,8 @@ test('episode 3: full play-through', async () => {
     }
   };
 
-  assert.match(html(), /Episode 3: Open House/);
-  click('Play episode 3');
+  assert.match(html(), /Episode 3a: Open House/);
+  click('Play episode 3a');
   assert.equal(store['story:at'], 'siege3');
   assert.equal(st().parts ?? TUNING.startParts, TUNING.startParts);
   click('Pick up the keypad');
@@ -196,7 +196,7 @@ test('episode 3: full play-through', async () => {
   formData = { feel: 'A game', pace: 'Good: I could think', next: 'the math bowl', broken: '' };
   click('Done');
   const rep = flat(main()).find((n) => n.tag === 'textarea').value;
-  assert.match(rep, /The Vark Job 3 \(Open House\): feedback \(TEST RUN by a teacher, not the student\)/);
+  assert.match(rep, /The Vark Job 3a \(Open House\): feedback \(TEST RUN by a teacher, not the student\)/);
   assert.match(rep, /finished, debrief done/);
   assert.match(rep, /Towers: glue at locker 2, fan at locker 3/);
   assert.match(rep, /Distributing a negative: [Yn ]+\n {2}status, all typed answers on this device, every episode: /);

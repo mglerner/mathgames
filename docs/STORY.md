@@ -34,7 +34,7 @@ grading does: a skill is not "covered", it is either demonstrated or not yet.
    corridor), never parts, gear or progress.
 7. **Learning is never timed.** Time is measured for the report, but nothing rewards speed
    while a skill is being taught or a miss is being explained. There is one deliberate
-   exception: episode 3's live mode (below) puts mild time pressure on typed answers, to
+   exception: episode 3b (below) puts mild time pressure on typed answers, to
    build speed on skills that have already been taught. Not every level works on everything.
 8. **"My answer is not here" is sometimes true.** In episode 2, one door per play-through
    leaves the right answer off its list. The button always opens the keypad, so tapping it
@@ -60,7 +60,8 @@ The two-day requirement is why each episode has a chapter break with a "stop her
 | --- | ------------- | ------------------------- | --------------------------------------------------------- |
 | 1   | The Vark Job  | Side-scrolling runs       | A pilot: five hand-written locks, one per gap.            |
 | 2   | The Other One | Side-scrolling runs, gear | Distribute a negative; solve; simplify roots; rationalize |
-| 3   | Open House    | Corridor defence, towers  | Re-checks all four; adds fractions. Two modes.            |
+| 3a  | Open House    | Corridor defence, towers  | Re-checks all four; adds fractions. Untimed.              |
+| 3b  | Rush Hour     | Real-time tower defence   | The same skills again, for speed.                         |
 
 Episode 1 is hand-written and multiple choice only. From episode 2 on, problems are generated.
 
@@ -105,12 +106,14 @@ think; they never answer anything.
 Each wave has four steps: a story brief, scouts (multiple choice, pinned under a mop bucket,
 for teaching), the cart, and the wave itself (typed).
 
-### Episode 3, live mode: real-time tower defence
+### Episode 3b: real-time tower defence
 
-The corridor above ("turns" mode) is safe but does not feel like tower defence. `TUNING.mode =
-'live'` swaps in a real-time corridor; scouts, wave plans, the mastery log and the report are
-shared. A page opened with `?td=live` (or `?td=turns`) uses that mode for an episode started
-there, so both can be tried without editing anything. The rules are in `story/game/live.js`:
+The corridor above is episode 3a ("turns" mode in the code). It is safe but does not feel like
+tower defence. Episode 3b ("live" mode) is the same night with a real-time corridor, and opens
+when 3a is finished. The two are one file, `story/ep3.js`, loaded twice by the menu; each has
+its own saved game, and 3b carries on down the problem lists from where 3a stopped. Scouts,
+wave plans, the mastery log and the report work the same way. The rules are in
+`story/game/live.js`:
 
 - Drones fly a winding path through the school in formations of three. Each formation is
   behind one brass plate, and while the plate is up nothing can hurt it.
@@ -250,7 +253,7 @@ so the pictures cannot drift from the game.
   student who took another route will answer "No, I did something else"; that answer is the
   data that would justify adding routes.
 - **Episode 3's balance is untested on a person**, in both modes. See the simulation tables.
-- **Live mode asks the same problems as turns mode.** They are paper-and-pencil sized. Speed
+- **Episode 3b asks the same kind of problems as 3a.** They are paper-and-pencil sized. Speed
   drills would be better served by one-step problems (`-(2x - 5)`, `sqrt(72)`), which do not
   exist yet as their own forms.
 - **Episode 1 has no screen previews.**

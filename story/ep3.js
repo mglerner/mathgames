@@ -7,9 +7,9 @@
 //   wave    typed answers; these are the only answers that count toward mastery (see mastery.js)
 // Which drones a wave sends is decided when the wave starts, from this device's log of typed
 // answers and the knobs in episodes/siege3.js.
-// The corridor plays one of two ways (TUNING.mode, fixed when an episode is started):
-//   turns   drones step once per answer; rules in game/siege.js
-//   live    real time, towers that shoot, formations behind plates; rules in game/live.js
+// The corridor plays one of two ways, and each is its own episode in the menu:
+//   turns   episode 3a: drones step once per answer; rules in game/siege.js
+//   live    episode 3b: real time, towers that shoot, formations behind plates; rules in game/live.js
 // State lives in localStorage.
 import { content, TUNING } from './episodes/siege3.js';
 import { problem, count, SKILLS } from './episodes/siege3-skills.js';
@@ -20,16 +20,17 @@ import { drawLive, squadAt, socketAt } from './game/drawlive.js';
 import { paras, lines, button, optionList, shuffled, radios, TESTER, post, newSid, cleanup, onCleanup, notesScreen, footer, typedPanel, reflect, matchForm, noteLabel } from './lib.js';
 import { today, loadLog, recordAttempt, status, visibleMs } from './mastery.js';
 
-const KEY = `story:${content.id}:v1`;
 const AWAY_MS = 180000; // a single answer slower than this is flagged "probably away"
 const BREAK_BEFORE = 2; // the chapter break comes before this wave (counting from 0)
 const MAX_SPARE = 2;
 const L = TUNING.live;
-/** The mode a new play-through gets: ?td=live or ?td=turns on the page address, else the knob. */
-const wantMode = () => {
-  try { const q = new URLSearchParams(location.search).get('td'); if (q === 'live' || q === 'turns') return q; } catch { /* no page address (tests) */ }
-  return TUNING.mode;
-};
+// This file is loaded twice by the menu: as episode 3a (turns) and, with ?mode=live on its
+// address, as episode 3b (live). Each copy has its own state and its own saved game.
+const MODE = new URL(import.meta.url).searchParams.get('mode') === 'live' ? 'live' : 'turns';
+const EID = MODE === 'live' ? `${content.id}b` : content.id; // names the saved game and tags the mastery log
+const TITLE = MODE === 'live' ? content.titleLive : content.title;
+const KEY = `story:${EID}:v1`;
+const OTHER = `story:${MODE === 'live' ? content.id : `${content.id}b`}:v1`; // the other copy's saved game
 
 /** The episode as a straight line of steps. A wave's steps are skipped when it has nothing to send. */
 const STEPS = (() => {
@@ -45,7 +46,7 @@ const STEPS = (() => {
 })();
 const BREAK_AT = STEPS.findIndex((s) => s.t === 'break');
 
-const fresh = (mode = wantMode()) => ({
+const fresh = (mode = MODE) => ({
   sid: newSid(), // names this play-through's feedback file on the server
   mode,
   step: 0, sub: '',
@@ -71,10 +72,9 @@ const fresh = (mode = wantMode()) => ({
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (!s || typeof s.step !== 'number') return fresh();
+    if (!s || typeof s.step !== 'number' || (s.mode && s.mode !== MODE)) return fresh(); // (a save made while trying the other corridor under this name is dropped)
     const step = STEPS.findIndex((x) => x.key === s.at);
-    if (step <= 0) return { ...fresh(), sid: s.sid || newSid() }; // still on the first page: nothing to keep, and the mode may have changed
-    return { ...fresh(s.mode || 'turns'), ...s, mode: s.mode || 'turns', step }; // a save from before there were modes is a turns game
+    return { ...fresh(), ...s, mode: MODE, step: step < 0 ? 0 : step };
   } catch {
     return fresh();
   }
@@ -124,12 +124,17 @@ export function dealIndex(total, form, used, k) {
 function usedByEp2(/** @type {string} */ key) {
   try { return (JSON.parse(localStorage.getItem('story:heist2:v1') || '{}').k || {})[key] || 0; } catch { return 0; }
 }
+/** How many problems of one form the other copy of this episode (3a or 3b) has dealt on this device. */
+function usedByOther(/** @type {string} */ key) {
+  try { return (JSON.parse(localStorage.getItem(OTHER) || '{}').k || {})[key] || 0; } catch { return 0; }
+}
 /** Deal the next problem of one form of a skill. */
 function take(/** @type {string} */ skill, /** @type {number} */ form) {
   const key = `${skill}:${form}`;
   const k = S.k[key] || 0;
   S.k[key] = k + 1;
-  const { n, again } = dealIndex(count(skill, form), form, usedByEp2(key), k);
+  // 3b carries on down the list from where 3a stopped, so the two do not ask the same numbers
+  const { n, again } = dealIndex(count(skill, form), form, usedByEp2(key), k + (MODE === 'live' ? usedByOther(key) : 0));
   return { skill, form, n, ...(again ? { again: true } : {}) };
 }
 const P = (/** @type {any} */ ref) => problem(ref.skill, ref.form, ref.n);
@@ -222,7 +227,7 @@ function report() {
   const where = S.debrief ? 'finished, debrief done' : `step ${S.step + 1} of ${STEPS.length} (${at.t}${at.wi !== undefined ? `, ${content.waves[at.wi].title}` : ''}${S.sub ? `, ${S.sub}` : ''})`;
   const log = loadLog();
   const out = [
-    `The Vark Job 3 (${content.title}): feedback${TESTER ? ' (TEST RUN by a teacher, not the student)' : ''}`,
+    `The Vark Job 3${MODE === 'live' ? 'b' : 'a'} (${TITLE}): feedback${TESTER ? ' (TEST RUN by a teacher, not the student)' : ''}`,
     `Progress: ${where}`,
     `Played on: ${S.days.join(', ') || '-'}`,
     `Time on screen: chapter 1 ${mins(S.active[1])}, chapter 2 ${mins(S.active[2])} (stops counting when the page is hidden)`,
@@ -307,7 +312,7 @@ function render() {
   const step = STEPS[S.step];
   const wave = step.wi !== undefined ? content.waves[step.wi] : null;
   const head = document.createElement('header');
-  head.innerHTML = `<span>${content.title}</span><span>${wave ? `Wave ${step.wi + 1} &middot; ` : ''}${S.parts} parts</span>`;
+  head.innerHTML = `<span>${TITLE}</span><span>${wave ? `Wave ${step.wi + 1} &middot; ` : ''}${S.parts} parts</span>`;
   app.append(head);
   const main = document.createElement('main');
   app.append(main);
@@ -317,7 +322,7 @@ function render() {
   S.flash = '';
 
   if (step.t === 'story') {
-    const page = step.id === 'intro' ? { title: content.title, text: content.intro.map(byMode) } : content.ending;
+    const page = step.id === 'intro' ? { title: TITLE, text: content.intro.map(byMode) } : content.ending;
     main.innerHTML = `<h1>${page.title}</h1>${paras(page.text)}`;
     main.append(button(step.id === 'intro' ? 'Pick up the keypad' : 'Debrief', () => advance()));
   } else if (step.t === 'break') {
@@ -502,7 +507,7 @@ function waveScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, /
       if (g.near) { S.nears[p.skill] = (S.nears[p.skill] || 0) + 1; holdMark = true; go({ near: { key: refKey(aim.ref), slip: g.slip } }); return; }
       const ms = visibleMs() - pmark;
       S.typed.push({ skill: p.skill, where: wave.id, ask: p.askTxt, ans: p.ansTxt, got: p.gotTxt(vals), ok: g.ok, ms, ...(aim.boss ? { boss: true } : {}), ...(aim.ref.again ? { again: true } : {}) });
-      recordAttempt(p.skill, g.ok, ms, `${content.id}:${wave.id}`);
+      recordAttempt(p.skill, g.ok, ms, `${EID}:${wave.id}`);
       const ref = aim.ref;
       slideFrom = Object.fromEntries(w.drones.map((/** @type {any} */ d) => [d.id, d.pos]));
       const ev = answer(w, aim.id, g.ok, S.towers);
@@ -692,7 +697,7 @@ function liveScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, /
       if (g.near) { S.nears[p.skill] = (S.nears[p.skill] || 0) + 1; holdMark = true; go({ near: { key: refKey(sq.ref), slip: g.slip } }); return; }
       const ms = visibleMs() - pmark;
       S.typed.push({ skill: p.skill, where: wave.id, ask: p.askTxt, ans: p.ansTxt, got: p.gotTxt(vals), ok: g.ok, ms, ...(sq.boss ? { boss: true } : {}), ...(sq.ref.again ? { again: true } : {}) });
-      recordAttempt(p.skill, g.ok, ms, `${content.id}:${wave.id}`);
+      recordAttempt(p.skill, g.ok, ms, `${EID}:${wave.id}`);
       const ref = sq.ref;
       answerPlate(w, sq.id, g.ok);
       dealLive();
@@ -763,7 +768,7 @@ export function summary() {
   const at = STEPS[S.step];
   return `In progress: chapter ${chapter()}${at.wi !== undefined ? `, wave ${at.wi + 1}` : ''}`;
 }
-export const title = content.title;
+export const title = TITLE;
 
 /** Take over the page. `menu` is called when the student taps "Episodes". */
 export function open(/** @type {HTMLElement} */ el, /** @type {() => void} */ menu) {
