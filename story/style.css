@@ -97,6 +97,8 @@ main > .link { display: block; margin: 8px auto 0; }
 .item .btn { margin-top: 12px; }
 /* episode 3: the corridor */
 .stage.siege { aspect-ratio: 400 / 170; cursor: pointer; }
+.stage.live { aspect-ratio: 400 / 300; cursor: pointer; touch-action: manipulation; }
+.stage.live.small { width: 62%; margin-left: auto; margin-right: auto; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0 0; }
 .chip { font: 15px/1 -apple-system, system-ui, sans-serif; color: var(--ink); background: var(--panel); border: 1px solid var(--line);
   border-radius: 999px; padding: 10px 14px; min-height: 40px; cursor: pointer; -webkit-tap-highlight-color: transparent; }

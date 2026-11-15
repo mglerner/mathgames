@@ -7,10 +7,34 @@
 //
 //   A skill needs more practice than the game is giving      TUNING.force = { solve: 4 }
 //   A skill is done and should not come back                 TUNING.force = { simplify: 0 }
-//   Waves feel too tense / not tense enough                  TUNING.pack, TUNING.lane, TUNING.shutters
+//   Waves feel too tense / not tense enough                  TUNING.pack, TUNING.lane, TUNING.shutters (live mode: TUNING.live)
+//   Real-time tower defence instead of one step per answer   TUNING.mode = 'live'
+//   Live mode without time pressure on the math              TUNING.live.think = 0
 //   Add or drop a wave, or change which skills it reviews    the `waves` list
 //   A new skill                                              add it to siege3-skills.js, then name it in a wave's `fresh`
 export const TUNING = {
+  // How the corridor plays. Everything else about the episode (scouts, what a wave sends, the report) is the same.
+  //   'turns'  the drones step once per answer entered; one straight corridor
+  //   'live'   real time on a winding path: towers shoot, formations hide behind a plate, and
+  //            the corridor slows down (TUNING.live.think) while the keypad is open. This is the mode
+  //            for speed: the scouts still teach untimed, and a miss is still explained untimed.
+  // A page opened with ?td=live or ?td=turns uses that mode for an episode started on it.
+  mode: 'turns',
+  live: {
+    size: 3, // drones in a formation (one plate per formation)
+    hp: [4, 6, 7, 9], // hits a drone takes, by wave: later waves need more towers
+    bossHp: 10, // hits per plate for the big one
+    speed: 24, // pixels a second along the path (the path is about 1040 long)
+    gap: 12, // seconds between formations
+    lives: 6, // drones that can reach the case before the wave is lost
+    surge: 140, // how far a formation jumps forward on a wrong answer
+    range: 80, rate: 0.8, // launcher reach in pixels, and seconds between its shots
+    slow: 0.45, // speed of a drone over floor wax, as a share of normal
+    fanPush: 160, // how far back a fan blows a drone (each fan gets one go at each drone)
+    think: 0.25, // how fast the corridor runs while a plate is open, as a share of normal. 0 stops it: no time pressure at all.
+    startParts: 6,
+    retryParts: 3, // extra parts found in the cart after a lost wave
+  },
   // Drones per review skill in a wave, by where the skill stands on this device when the wave starts
   // (see `status` in mastery.js). "none" means no typed answers at all, e.g. episode 2 was skipped.
   review: { none: 3, practicing: 3, fluent: 2, mastered: 1 },
@@ -33,16 +57,29 @@ export const TUNING = {
 export const content = {
   id: 'siege3',
   title: 'Open House',
+  // An entry that is {turns, live} is the paragraph for each way the corridor can play (TUNING.mode).
   intro: [
     `Three weeks of nothing. Then Dez turns up at lunch with a delivery note she should not have.`,
     `"Forty crates. Addressed to the school roof. Signed for by a 'Mr L. V. Arkwright', who does not exist." She puts it on the table. "He said next time he comes to us. It is next time."`,
     `That night the three of you are in the main corridor with the lights off. At the far end are the double doors to the yard. At this end is the trophy case: the 1987 state championship, and next to it a 1998 Tri-County Math Bowl cup with a label in Dez's handwriting that says <i>ON LOAN</i>.`,
     `Something on the roof starts to hum.`,
     `The first one comes through the letterbox. It is the size of a pizza box, it flies, and it has a brass plate bolted to the front with a problem engraved on it.`,
-    `Wrench catches it in a mop bucket and has the back off in ten seconds. "Oh, he cannot help himself," she says. "Look at the firmware. A drone with a solved plate has nothing left to do. It folds up. He made the off switch a math problem."`,
-    `The PA system crackles. <i>"Good evening,"</i> says Lucian Vark, from every speaker in the building. <i>"I am not a barbarian. A problem deserves an attempt, so my machines wait for one. Take all the time you like. But each answer you enter, right or wrong, they come one locker closer. Do try to make them count."</i>`,
+    {
+      turns: `Wrench catches it in a mop bucket and has the back off in ten seconds. "Oh, he cannot help himself," she says. "Look at the firmware. A drone with a solved plate has nothing left to do. It folds up. He made the off switch a math problem."`,
+      live: `Wrench catches it in a mop bucket and has the back off in ten seconds. "Oh, he cannot help himself," she says. "Look at the firmware. The plate is the armour. Solve what is on it and the shield drops, and then a tennis ball will do the rest. He made the off switch a math problem."`,
+    },
+    {
+      turns: `The PA system crackles. <i>"Good evening,"</i> says Lucian Vark, from every speaker in the building. <i>"I am not a barbarian. A problem deserves an attempt, so my machines wait for one. Take all the time you like. But each answer you enter, right or wrong, they come one locker closer. Do try to make them count."</i>`,
+      live: `The PA system crackles. <i>"Good evening,"</i> says Lucian Vark, from every speaker in the building. <i>"My machines fly in formation, and each formation flies behind a brass plate. Nothing your friend with the spanner can build will scratch them while the plate is unsolved. I am not a barbarian: while you work on a plate they will slow to a crawl. They will not stop. Do try to be quick. And do try to be right."</i>`,
+    },
     `"So we do not guess," says Dez.`,
     `"We do not guess," says Wrench, and hands you the keypad.`,
+  ],
+  howToLive: [
+    `<b>How the corridor works.</b> Drones fly through the school in formations. Each formation hides behind one brass plate, and while the plate is up nothing can hurt it.`,
+    `Tap a formation to open its plate. <b>While a plate is open everything slows to a crawl, but it does not stop.</b> Quick and right is what wins; quick and wrong is worse than slow.`,
+    `Solve the plate and the shields drop: your towers do the rest. Get it wrong and that formation surges forward with a new plate. Nothing moves while you read what went wrong.`,
+    `The green bars on the trophy case are fire shutters. Each drone that gets there uses one up.`,
   ],
   howTo: [
     `<b>How the corridor works.</b> Nothing moves on a clock. The drones take one step each time you enter an answer.`,
@@ -88,7 +125,7 @@ export const content = {
         `The hum on the roof stops. Then something much larger starts up.`,
         `<i>"I had hoped not to need this,"</i> says the PA, in the voice of a man who has been looking forward to it all week.`,
         `It comes through the double doors sideways because it does not fit the other way. It is the size of a dining table. It has a small brass plaque that says <i>THE CHAIRMAN</i> and, bolted to the front, not one plate but a stack of them.`,
-        `"It is slow," says Wrench. "It moves on every second answer. But you have to get through every plate."`,
+        `"It is slow," says Wrench. "But it has a stack of plates, and you have to get through every one."`,
         `A few ordinary drones tuck in ahead of it, like ducklings.`,
       ],
       won: [
@@ -127,6 +164,11 @@ export const content = {
   towers: [
     { id: 'glue', name: 'Glue mat', cost: 3, what: 'A drone that lands on this locker is stuck there for one extra move.' },
     { id: 'fan', name: 'Gym fan', cost: 5, what: 'Every time you solve a plate, a drone hovering over the fan is blown back two lockers.' },
+  ],
+  towersLive: [
+    { id: 'launcher', name: 'Ball launcher', cost: 3, what: 'From the PE store. Fires tennis balls at any drone in reach whose shield is down.' },
+    { id: 'wax', name: 'Floor wax', cost: 3, what: 'Every drone passing near it moves at half speed, shield or no shield. Does no damage.' },
+    { id: 'fan', name: 'Gym fan', cost: 5, what: 'The first time a drone comes near it, the drone is blown a long way back down the corridor. Does no damage.' },
   ],
   spare: { cost: 4, what: 'One more fire shutter: one more drone can reach the case before the wave is lost.' },
 };

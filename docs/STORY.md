@@ -32,8 +32,10 @@ grading does: a skill is not "covered", it is either demonstrated or not yet.
    `1/2`, gets a note and the same problem again. It counts neither way.
 6. **Nothing earned is taken away.** A miss costs position in the story (a lockout, a step of
    corridor), never parts, gear or progress.
-7. **Thinking is never timed.** Time is measured for the report, but nothing in the game
-   rewards speed. See "The corridor" below for how episode 3 keeps this.
+7. **Learning is never timed.** Time is measured for the report, but nothing rewards speed
+   while a skill is being taught or a miss is being explained. There is one deliberate
+   exception: episode 3's live mode (below) puts mild time pressure on typed answers, to
+   build speed on skills that have already been taught. Not every level works on everything.
 8. **"My answer is not here" is sometimes true.** In episode 2, one door per play-through
    leaves the right answer off its list. The button always opens the keypad, so tapping it
    reveals nothing.
@@ -58,7 +60,7 @@ The two-day requirement is why each episode has a chapter break with a "stop her
 | --- | ------------- | ------------------------- | --------------------------------------------------------- |
 | 1   | The Vark Job  | Side-scrolling runs       | A pilot: five hand-written locks, one per gap.            |
 | 2   | The Other One | Side-scrolling runs, gear | Distribute a negative; solve; simplify roots; rationalize |
-| 3   | Open House    | Corridor defence, towers  | Re-checks all four; adds fractions.                       |
+| 3   | Open House    | Corridor defence, towers  | Re-checks all four; adds fractions. Two modes.            |
 
 Episode 1 is hand-written and multiple choice only. From episode 2 on, problems are generated.
 
@@ -102,6 +104,43 @@ think; they never answer anything.
 
 Each wave has four steps: a story brief, scouts (multiple choice, pinned under a mop bucket,
 for teaching), the cart, and the wave itself (typed).
+
+### Episode 3, live mode: real-time tower defence
+
+The corridor above ("turns" mode) is safe but does not feel like tower defence. `TUNING.mode =
+'live'` swaps in a real-time corridor; scouts, wave plans, the mastery log and the report are
+shared. A page opened with `?td=live` (or `?td=turns`) uses that mode for an episode started
+there, so both can be tried without editing anything. The rules are in `story/game/live.js`:
+
+- Drones fly a winding path through the school in formations of three. Each formation is
+  behind one brass plate, and while the plate is up nothing can hurt it.
+- Tapping a formation opens its plate on the keypad. A right answer drops the shield, and the
+  towers do the rest. A wrong answer makes the formation surge forward with new numbers.
+- **While a plate is open the corridor runs at a quarter speed** (`TUNING.live.think`); it is
+  stopped while a miss is explained and while the cart is open. So speed is rewarded, but a
+  wrong answer always costs more than a slow one. `think: 0` removes the time pressure.
+- Parts buy towers on six fixed spots, between waves or during one. A right answer earns a part.
+- A lost wave is played again with new numbers and 3 more parts.
+- The Chairman has three plates; each solved plate exposes it to a third of its damage.
+
+| Tower         | Cost | Effect                                                             |
+| ------------- | ---- | ------------------------------------------------------------------ |
+| Ball launcher | 3    | Hits drones in reach whose shield is down. The only damage.        |
+| Floor wax     | 3    | Drones near it move at 0.45 of normal speed.                       |
+| Gym fan       | 5    | Blows each drone back, once only, so nothing can stall a wave.     |
+| Spare shutter | 4    | One more drone may reach the case (max 2).                         |
+
+Simulated share of waves lost (400 waves per cell), for a player who takes the stated time per
+plate and buys only launchers. This models pace and accuracy, not a person, and wax and fans
+were not simulated.
+
+| Time per plate, share right | 10 s, 90% | 10 s, 70% | 20 s, 90% | 20 s, 70% | 35 s, 90% | 35 s, 70% |
+| --------------------------- | --------- | --------- | --------- | --------- | --------- | --------- |
+| Waves 1 to 3                | 0%        | 0%        | 0%        | 1 to 3%   | 0 to 2%   | 19 to 27% |
+| Wave 4, with the Chairman   | 0%        | 1%        | 0%        | 4%        | 3%        | 31%       |
+
+The report adds the median time on a right answer per skill, first half against second half
+of the episode, which is the measure of whether speed is improving.
 
 ## How episode 3 adapts, and how to steer it
 
@@ -210,7 +249,10 @@ so the pictures cannot drift from the game.
 - **One solution route.** The guessed wrong working assumes one way of doing each problem. A
   student who took another route will answer "No, I did something else"; that answer is the
   data that would justify adding routes.
-- **Episode 3's balance is untested on a person.** See the simulation table above.
+- **Episode 3's balance is untested on a person**, in both modes. See the simulation tables.
+- **Live mode asks the same problems as turns mode.** They are paper-and-pencil sized. Speed
+  drills would be better served by one-step problems (`-(2x - 5)`, `sqrt(72)`), which do not
+  exist yet as their own forms.
 - **Episode 1 has no screen previews.**
 - **Shared code is partly duplicated.** `ep2.js` and `ep3.js` each carry their own copy of the
   save, timing and report plumbing.
