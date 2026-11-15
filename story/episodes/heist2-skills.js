@@ -410,3 +410,6 @@ export function problem(skill, form, n) {
   const wrong = p.options.filter((o) => !o.right).slice(0, 4);
   return { skill, form, n, params, ...p, options: [p.options.find((o) => o.right), ...wrong] };
 }
+
+// Shared with later episodes' problem generators.
+export { B, G, A, T, h, red, shuffle, finish, near, range, cross, enough };

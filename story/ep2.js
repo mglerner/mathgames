@@ -7,7 +7,7 @@
 import { content } from './episodes/heist2.js';
 import { problem, count, SKILLS } from './episodes/heist2-skills.js';
 import { levels2 } from './game/levels2.js';
-import { paras, lines, button, optionList, shuffled, radios, TESTER, post, newSid, cleanup, onCleanup, runScreen, notesScreen, footer } from './lib.js';
+import { paras, lines, button, optionList, shuffled, radios, TESTER, post, newSid, cleanup, runScreen, notesScreen, footer, typedPanel, reflect, matchForm, noteLabel } from './lib.js';
 import { today, loadLog, recordAttempt, status, visibleMs } from './mastery.js';
 
 const KEY = `story:${content.id}:v1`;
@@ -123,80 +123,6 @@ const earn = (/** @type {number} */ n) => { S.parts += n; S.earned += n; };
 const partsLine = (/** @type {number} */ n) => `<p class="cleared">+${n} part${n === 1 ? '' : 's'}. You have ${S.parts}.</p>`;
 
 // ---------------------------------------------------------------- typed answers
-/**
- * A problem with empty boxes and an on-screen keypad (whole numbers, with a minus sign).
- * @param {HTMLElement} main @param {any} p @param {(vals: number[]) => void} onEnter
- */
-function typedPanel(main, p, onEnter) {
-  const vals = Array(p.boxes).fill(''); // what is typed in each box
-  // Some boxes are the second term of an expression. Their sign is not typed into the box: it is
-  // the + or - written between the terms, chosen separately, so the line reads like "-4x + 12".
-  /** @type {Record<number, string>} */ const signs = {};
-  const split = (/** @type {number} */ i) => (p.signed || []).includes(i);
-  let on = 0;
-  const ask = document.createElement('div');
-  ask.className = 'ask typed';
-  const ok = () => vals.every((v, i) => (split(i) ? /^\d+$/.test(v) && !!signs[i] : /^-?\d+$/.test(v)));
-  const numbers = () => vals.map((v, i) => Number(v) * (signs[i] === '-' ? -1 : 1));
-  const enter = button('Enter', () => { if (ok()) onEnter(numbers()); }, 'key go');
-  const flip = (/** @type {number} */ i) => { signs[i] = signs[i] === '+' ? '-' : '+'; };
-  const paint = () => {
-    ask.innerHTML = p.typed
-      .replace(/\{s(\d)\}/g, (/** @type {string} */ _, /** @type {string} */ i) =>
-        `<span class="sgn${signs[+i] ? '' : ' unset'}${!signs[+i] && vals[+i] ? ' need' : ''}" data-s="${i}">${signs[+i] === '-' ? '&minus;' : signs[+i] || '&plusmn;'}</span>`)
-      .replace(/\{(\d)\}/g, (/** @type {string} */ _, /** @type {string} */ i) =>
-        `<span class="box${+i === on ? ' on' : ''}" data-i="${i}">${vals[+i].replace('-', '&minus;') || '&nbsp;'}</span>`);
-    enter.disabled = !ok();
-  };
-  const press = (/** @type {string} */ k) => {
-    let v = vals[on];
-    if (k === 'next') { on = (on + 1) % p.boxes; paint(); return; }
-    if (k === '-' && split(on)) { flip(on); paint(); return; }
-    if (k === 'del') v = v.slice(0, -1);
-    else if (k === '-') v = v.startsWith('-') ? v.slice(1) : `-${v}`;
-    else if (v.replace('-', '').length < 4) v += k;
-    vals[on] = v;
-    paint();
-  };
-  ask.addEventListener('click', (/** @type {any} */ e) => {
-    const hit = e && e.target && e.target.closest ? e.target.closest('[data-i], [data-s]') : null;
-    if (!hit) return;
-    if (hit.dataset.s !== undefined) { on = +hit.dataset.s; flip(on); } else on = +hit.dataset.i;
-    paint();
-  });
-  const keys = document.createElement('div');
-  keys.className = 'keys';
-  const key = (/** @type {string} */ label, /** @type {string} */ k, cls = 'key') => button(label, () => press(k), cls);
-  const next = key('Next box', 'next', 'key fn');
-  next.disabled = p.boxes < 2;
-  const sign = key('+/&minus;', '-', 'key sign');
-  sign.disabled = !p.neg; // square-root answers are never negative, so the key is switched off there
-  keys.append(
-    key('7', '7'), key('8', '8'), key('9', '9'), key('Del', 'del', 'key fn'),
-    key('4', '4'), key('5', '5'), key('6', '6'), sign,
-    key('1', '1'), key('2', '2'), key('3', '3'), next,
-    key('0', '0', 'key zero'), enter,
-  );
-  const hint = document.createElement('p');
-  hint.className = 'hint';
-  hint.innerHTML = p.typedHint;
-  main.append(ask, keys, hint);
-  paint();
-  if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
-    const onKey = (/** @type {KeyboardEvent} */ e) => {
-      if (/^\d$/.test(e.key)) press(e.key);
-      else if ((e.key === '-' || e.key === '+') && split(on)) { signs[on] = e.key; paint(); } else if (e.key === '-' && p.neg) press('-');
-      else if (e.key === 'Backspace') press('del');
-      else if (e.key === 'Tab' && p.boxes > 1) { e.preventDefault(); press('next'); } else if (e.key === 'Enter') {
-        e.preventDefault(); // otherwise Enter also "clicks" whichever keypad button was tapped last
-        if (ok()) onEnter(numbers());
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    onCleanup(() => window.removeEventListener('keydown', onKey));
-  }
-}
-
 const refKey = (/** @type {any} */ ref) => `${ref.skill}:${ref.form}:${ref.n}`;
 /** The note shown above the keypad after a "right value, not finished" entry on this same problem. */
 const nearNote = () => (S.near && S.cur && S.near.key === refKey(S.cur)
@@ -228,32 +154,6 @@ function missOf(/** @type {any} */ ref, /** @type {number[]} */ vals, /** @type 
   const g = p.grade(vals);
   return { ref, ti, id: g.id, got: p.gotHtml(vals), slip: g.slip };
 }
-
-const MATCH = ['Yes', 'Sort of', 'No, I did something else'];
-/**
- * The reflection under every explanation: (when guessed working was shown) "was that what you
- * wrote?", and always one sentence in the student's own words. Both are required before the button works.
- * @param {HTMLElement} main @param {boolean} asked whether the match question is on this page
- * @param {string} label @param {(note: {match: any, text: string}) => void} onNext
- */
-function reflect(main, asked, label, onNext) {
-  const ta = document.createElement('textarea');
-  ta.id = 'note';
-  ta.rows = 3;
-  ta.placeholder = 'One sentence is fine.';
-  const nudge = document.createElement('p');
-  nudge.className = 'hint';
-  const next = button(label, () => {
-    const match = asked ? new FormData(/** @type {HTMLFormElement} */ (document.getElementById('match'))).get('match') : null;
-    if (asked && !match) { nudge.textContent = 'Answer the question about the red working first.'; return; }
-    onNext({ match, text: ta.value.trim() });
-  });
-  next.disabled = true;
-  ta.addEventListener('input', () => { next.disabled = ta.value.trim().length < 5; });
-  main.append(ta, nudge, next);
-}
-const matchForm = `<form id="match">${radios('match', 'Was the red working above what you actually wrote?', MATCH)}</form>`;
-const noteLabel = '<label for="note">In your own words: what went wrong?</label>';
 
 /**
  * The page after a typed miss: what the student typed, the likely slip (with the working they
@@ -429,7 +329,7 @@ function doorScreens(main, floor, door) {
     });
     main.append(button('Back to the list', () => { rec.ms += visibleMs() - pmark; go({ sub: '', near: null }); }, 'link'));
   } else if (S.sub === 'ownmiss') {
-    missPage(main, 'Setback', 'That one was not the right answer either. The lock wants proof before it takes another try.', 'Continue', (note) => {
+    missPage(main, 'Setback', 'So that was not it. The lock wants proof before it takes another try.', 'Continue', (note) => {
       rec.wrong.push({ txt: S.miss.txt, typed: true, ...note });
       go({ sub: 'lockout', miss: null, lv: take(floor.skill, door.form) });
       send();

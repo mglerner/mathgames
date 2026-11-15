@@ -94,6 +94,13 @@ main > .link { display: block; margin: 8px auto 0; }
 .item { background: var(--panel); border-radius: 10px; padding: 14px 16px; margin: 14px 0; }
 .item span { color: var(--dim); font-size: 16px; }
 .item .btn { margin-top: 12px; }
+/* episode 3: the corridor */
+.stage.siege { aspect-ratio: 400 / 170; cursor: pointer; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0 0; }
+.chip { font: 15px/1 -apple-system, system-ui, sans-serif; color: var(--ink); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 999px; padding: 10px 14px; min-height: 40px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.chip.on { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 2px rgba(226,182,90,.25); }
+.chips + div + .ask { margin-top: 10px; }
 /* math */
 .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 .15em; line-height: 1.15; }
 .frac > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 .2em .05em; }

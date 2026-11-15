@@ -3,12 +3,14 @@
 // Remembers which one was open, so a reload lands back in the same place.
 import * as ep1 from './ep1.js';
 import * as ep2 from './ep2.js';
+import * as ep3 from './ep3.js';
 import { button, cleanup } from './lib.js';
 
 const AT = 'story:at';
 const EPISODES = [
   { id: 'pilot', n: 1, mod: ep1, blurb: 'Five locks. Get the school trophy back out of Vark Tower.' },
   { id: 'heist2', n: 2, mod: ep2, blurb: 'Four floors, two chapters. Vark has dared you to come back for his own cup.' },
+  { id: 'siege3', n: 3, mod: ep3, blurb: 'Vark comes to the school. His problems fly down the corridor at you. Stop them.' },
 ];
 const app = /** @type {HTMLElement} */ (document.getElementById('app'));
 

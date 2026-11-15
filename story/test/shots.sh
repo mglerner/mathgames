@@ -1,5 +1,5 @@
 #!/bin/sh
-# Takes pictures of episode 2's screens so they can be checked without a phone.
+# Takes pictures of episode 2's and 3's screens so they can be checked without a phone.
 #
 #   story/test/shots.sh            every screen
 #   story/test/shots.sh lock       only previews whose name contains "lock"

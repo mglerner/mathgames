@@ -17,14 +17,16 @@
 <body>
 <div id="frames"></div>
 <script type="module">
-  // Draws episode 2's screens side by side using the game's own code and stylesheet.
+  // Draws episode 2's and 3's screens side by side using the game's own code and stylesheet.
   //   preview.html                 every screen
-  //   preview.html?names=a,b       just those (names come from previews() in ep2.js)
-  import { previews, renderPreview } from '../ep2.js';
+  //   preview.html?names=a,b       just those (names come from previews() in ep2.js and ep3.js)
+  import * as ep2 from '../ep2.js';
+  import * as ep3 from '../ep3.js';
   const want = new URLSearchParams(location.search).get('names');
   const pick = want ? want.split(',') : null;
   const frames = document.getElementById('frames');
-  for (const pv of previews()) {
+  const all = [ep2, ep3].flatMap((ep) => ep.previews().map((pv) => ({ pv, ep })));
+  for (const { pv, ep } of all) {
     if (pick && !pick.includes(pv.name)) continue;
     const frame = document.createElement('div');
     frame.className = 'frame';
@@ -35,7 +37,7 @@
     app.className = 'app';
     frame.append(name, app);
     frames.append(frame);
-    try { renderPreview(app, pv); } catch (e) { app.textContent = `PREVIEW FAILED: ${e && e.stack ? e.stack : e}`; }
+    try { ep.renderPreview(app, pv); } catch (e) { app.textContent = `PREVIEW FAILED: ${e && e.stack ? e.stack : e}`; }
   }
   document.title = `previews ready (${frames.children.length})`;
 </script>
