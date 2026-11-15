@@ -1,5 +1,11 @@
 # KEYSTONE DEEP -- design spec v2 (build document, revised after referee report)
 
+> **Status (2026-11-14): historical.** This is the build document for an earlier, larger engine.
+> It was built and tested (`src/`, `api/`, `scripts/`, `proto/`, `test/`) but is not what is
+> deployed. The game that is live is the story game in `story/`; its design is `docs/STORY.md`.
+> This file is kept for the ideas the story game has not used yet: the misconception catalogue,
+> the spaced schedule, the answer parser. It is not being kept up to date.
+
 Working title only; run a trademark / app-store search before shipping. All in-game names below are original to this project.
 
 Items I have NOT verified:

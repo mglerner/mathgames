@@ -2,7 +2,8 @@
 
 A choose-your-own-adventure math game for a student getting ready for Algebra 2. You are part
 of a small crew breaking into Vark Tower, and every lock in the building is a math problem.
-Between locks there are short side-scrolling running sections.
+Between locks there are short side-scrolling running sections, and in the third episode the
+problems come to you: a turn-based corridor defence where each drone carries one.
 
 It is live at https://shadyalexi.com/ and runs in a phone browser. Plain JavaScript modules,
 no build step, no dependencies.
@@ -10,8 +11,8 @@ no build step, no dependencies.
 ## What it teaches, and how
 
 The skills are the ones that tend to be shaky going into Algebra 2: distributing a negative,
-solving linear equations with negatives, simplifying square roots, and rationalizing a
-denominator. The design rests on a few rules.
+solving linear equations with negatives, simplifying square roots, rationalizing a
+denominator, and adding fractions. The design rests on a few rules.
 
 - **Wrong answers are named, not just marked.** Every wrong choice comes from a specific slip
   (a lost sign, a term that was not multiplied). Picking it shows the working that probably
@@ -25,6 +26,10 @@ denominator. The design rests on a few rules.
   teaches it first.
 - **"My answer is not here" is sometimes true.** One door per play-through leaves the right
   answer off its list. The button always asks for the answer, so tapping it gives nothing away.
+- **Thinking is never timed.** In the corridor defence the drones move one step per answer
+  entered, not per second, so guessing costs ground and working on paper costs nothing.
+- **Later episodes re-check earlier skills.** Episode 3 sends more problems, and re-teaches
+  first, for the skills that are not solid yet on that device.
 - **The teacher gets a plain-text report**: every answer, the time on each problem (counted
   only while the page is visible), and the student's own notes.
 
@@ -34,16 +39,17 @@ denominator. The design rests on a few rules.
 | ------------------------------------ | -------------------------------------------------------------------- |
 | `story/`                             | The game that is live. Everything below is about this folder.        |
 | `story/app.js`                       | Episode menu.                                                        |
-| `story/ep1.js`, `story/ep2.js`       | The two episode players.                                             |
-| `story/episodes/`                    | Story text, and the problem generators for episode 2.                |
-| `story/game/`                        | The running sections: simulation, drawing, levels.                   |
+| `story/ep1.js` ... `ep3.js`          | The three episode players.                                           |
+| `story/episodes/`                    | Story text, problem generators, and episode 3's tuning knobs.        |
+| `story/game/`                        | Running sections and the episode 3 corridor: rules, drawing.         |
 | `story/mastery.js`                   | The mastery rule and the on-screen timer.                            |
 | `story/feedback.php`                 | Receives the report. Write-only; stores it outside the web root.     |
 | `story/teacher/`                     | Open once on a device to label its reports as test runs.             |
 | `story/test/`                        | Tests, and a tool that takes pictures of every screen.               |
 | `src/`, `api/`, `scripts/`, `proto/` | An earlier, larger engine ("Keystone Deep") and its first prototype. |
 | `test/`                              | Tests for that earlier engine.                                       |
-| `docs/DESIGN.md`                     | The earlier engine's design document. It does not describe `story/`. |
+| `docs/STORY.md`                      | Design of the story game: rules, episodes, how to tune episode 3.    |
+| `docs/DESIGN.md`                     | The earlier engine's design document. Historical.                    |
 
 The earlier engine is kept because its problem generators, answer parser and catalogue of
 common slips ("mal-rules") are reusable. It is not what is deployed.
