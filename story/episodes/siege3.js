@@ -47,7 +47,7 @@ export const content = {
   howTo: [
     `<b>How the corridor works.</b> Nothing moves on a clock. The drones take one step each time you enter an answer.`,
     `A right answer folds up the drone you aimed at. A wrong answer gives that drone new numbers. Either way, the rest come one locker closer.`,
-    `Tap a drone to aim at it. If three of them reach the trophy case, Wrench drops the fire shutters and you take the wave again with more room.`,
+    `Tap a drone to aim at it. The green bars on the trophy case are fire shutters: each drone that gets there uses one up. When they are gone, the wave starts again with more room.`,
   ],
   waves: [
     {
@@ -58,7 +58,7 @@ export const content = {
         `"Brackets and equations," says Dez, reading plates through binoculars. "The ones with the minus signs."`,
       ],
       won: [`The last drone folds itself into a neat square and drops onto the lino. Dez stacks it with the others. "They are quite tidy," she says. "I will give him that."`],
-      lost: [`The third drone thumps into the trophy case. Wrench hits the red button by the staff room and steel fire shutters slam down over the glass. The drones bump against them, confused, and drift back up the corridor to start again.`],
+      lost: [`One drone too many thumps into the trophy case. Wrench hits the red button by the staff room and steel fire shutters slam down over the glass. The drones bump against them, confused, and drift back up the corridor to start again.`],
     },
     {
       id: 'w2', title: 'The Root Cellar Sends Its Regards', review: ['simplify', 'rationalize'], fresh: [],
@@ -68,7 +68,7 @@ export const content = {
         `"Square roots," says Wrench. "He has sent us his greenhouse." She cracks her knuckles. "Simplest form, nothing left under the root that should not be there, and no roots on the bottom."`,
       ],
       won: [`The corridor goes quiet. One folded drone still has its plant label on. It says <i>basil</i>.`],
-      lost: [`Three of them reach the case before you can stop them. Wrench drops the fire shutters again. "Slower," she says. "He said it himself. The clock is not the problem."`],
+      lost: [`Too many of them reach the case before you can stop them. Wrench drops the fire shutters again. "Slower," she says. "He said it himself. The clock is not the problem."`],
     },
     {
       id: 'w3', title: 'New Material', review: [], fresh: ['frac'],
@@ -125,7 +125,7 @@ export const content = {
     ],
   },
   towers: [
-    { id: 'glue', name: 'Glue mat', cost: 3, what: 'A drone that flies over it is stuck there for one extra move.' },
+    { id: 'glue', name: 'Glue mat', cost: 3, what: 'A drone that lands on this locker is stuck there for one extra move.' },
     { id: 'fan', name: 'Gym fan', cost: 5, what: 'Every time you solve a plate, a drone hovering over the fan is blown back two lockers.' },
   ],
   spare: { cost: 4, what: 'One more fire shutter: one more drone can reach the case before the wave is lost.' },

@@ -31,15 +31,21 @@ function frac([a, b, c, d, sg]) {
   const both = kb > 1 && kd > 1;
   const opts = [
     o(N, D, { right: true }),
-    {
-      n: a + sg * c, d: b + sg * d,
-      slip: `Tops and bottoms were ${sg > 0 ? 'added' : 'subtracted'} straight across. That only works for multiplying. To ${sg > 0 ? 'add' : 'subtract'}, the pieces have to be the same size first: both bottoms must be ${L}.`,
-      guess: (n, dd) => [`${expr} = ${F(B(`${a} ${op} ${c}`), B(`${b} ${op} ${d}`))}`, `= ${B(fr(n, dd))}`, ...thenLow(n, dd, B)],
-    },
+    // (For subtraction, straight across gives a negative over a negative: not a believable route, so it is left out.)
+    ...(sg > 0 ? [{
+      n: a + c, d: b + d,
+      slip: `The tops were added and the bottoms were added. Going straight across is the rule for multiplying fractions, not for adding them. To add, the pieces have to be the same size first: both bottoms must be ${L}.`,
+      guess: (n, dd) => [`${expr} = ${F(B(`${a} + ${c}`), B(`${b} + ${d}`))}`, `= ${B(fr(n, dd))}`, ...thenLow(n, dd, B)],
+    }] : []),
     {
       n: a + sg * c, d: L,
       slip: `The bottom${both ? 's were' : ' was'} changed to ${L} but the top${both ? 's were' : ' was'} left alone, so the amount changed. Multiplying only the bottom is not multiplying by 1: ${fr(a, b)} ${T} ${one(kb)} = ${fr(a * kb, L)}.`,
       guess: (n, dd) => [`${expr} = ${fr(B(a), L)} ${op} ${fr(both ? B(c) : c, L)}`, `= ${B(fr(n, dd))}`, ...thenLow(n, dd, B)],
+    },
+    {
+      n: top, d: b,
+      slip: `The tops are right, but the bottom went back to ${b}. Both fractions were renamed with ${L} on the bottom, so the answer has ${L} on the bottom too.`,
+      guess: (n, dd) => [`${expr} = ${fr(a * kb, L)} ${op} ${fr(c * kd, L)}`, `= ${F(top, B(b))}`, ...thenLow(n, dd, B)],
     },
     both ? {
       n: a * kb + sg * c, d: L,
@@ -52,7 +58,7 @@ function frac([a, b, c, d, sg]) {
     },
     {
       n: a * kb + sg * c * kd, d: b + d,
-      slip: `The tops were renamed correctly, but then the two bottoms were added. Once both fractions are in ${L}ths the bottom stays ${L}: you are counting ${L}ths, not changing their size.`,
+      slip: `The tops were renamed correctly, but then the two bottoms were added. Once both fractions have ${L} on the bottom, the bottom stays ${L}: you are counting pieces of that size, not changing the size.`,
       guess: (n, dd) => [`${expr} = ${fr(a * kb, L)} ${op} ${fr(c * kd, L)}`, `= ${F(top, B(`${b} + ${d}`))}`, `= ${B(fr(n, dd))}`, ...thenLow(n, dd, B)],
     },
   ].map((w) => (w.right ? w : o(w.n, w.d, { slip: w.slip, guess: w.guess(w.n, w.d) })));
@@ -69,7 +75,7 @@ function frac([a, b, c, d, sg]) {
     askTxt: exprT, ansTxt: `${N}/${D}`,
     ask: `${DO('Work out, in lowest terms')}<span class="nw">${expr}</span>`, show: `<span class="nw">${expr}</span>`,
     typed: `<span class="nw">${expr} = ${F('{0}', '{1}')}</span>`,
-    typedHint: 'Top box, then bottom box. Give the answer in lowest terms.',
+    typedHint: 'Top box, then bottom box. Give the answer in lowest terms. Top-heavy answers like 7/6 are fine.',
     boxes: 2, answer: [N, D], options, worked,
     grade: (v) => {
       if (v[0] === N && v[1] === D) return { ok: true };

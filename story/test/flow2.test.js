@@ -92,6 +92,8 @@ test('episode 2: full play-through', async () => {
 
   // menu
   assert.match(main().innerHTML, /Pick an episode/);
+  assert.ok(!has('Play episode 3'), 'episode 3 waits for episode 2');
+  assert.match(flat(appEl).map((n) => n.textContent).join(' '), /Opens when episode 2 is finished/);
   click('Play episode 2');
   assert.equal(store['story:at'], 'heist2');
   click('Start the job');
@@ -278,6 +280,7 @@ test('episode 2: full play-through', async () => {
   click('Episodes');
   const menu = flat(main()).map((n) => n.innerHTML).join('\n');
   assert.match(menu, /Episode 2: The Other One.*Finished/);
+  assert.ok(has('Play episode 3'), 'finishing episode 2 opens episode 3');
   assert.match(menu, /Episode 1: The Vark Job.*Not started/);
 
   // starting over wipes this episode only

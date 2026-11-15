@@ -135,6 +135,29 @@ follows that file.
 
 A wave with nothing to send is skipped, and so is a scout step with nothing to teach.
 
+Episode 3 stays locked in the menu until episode 2 is finished on that device (a teacher's test
+device is not locked), because it plans from episode 2's results.
+
+### How hard the corridor is
+
+A simulation of 20,000 waves per cell, at the default knobs (corridor of 6, pack of 3,
+3 shutters), for a student who answers each plate right with the given probability and always
+aims at the front drone. Each cell is the share of waves lost.
+
+| Wave                | Towers       | 50% right | 60% | 70%  | 80%  | 90% |
+| ------------------- | ------------ | --------- | --- | ---- | ---- | --- |
+| 4 drones            | none         | 6%        | 2%  | 0.3% | 0%   | 0%  |
+| 6 drones            | none         | 25%       | 10% | 2%   | 0.4% | 0%  |
+| 6 drones            | glue and fan | 14%       | 4%  | 0.7% | 0.1% | 0%  |
+| 6 drones + Chairman | none         | 31%       | 12% | 3%   | 0.3% | 0%  |
+| 6 drones + Chairman | glue and fan | 17%       | 5%  | 0.9% | 0.1% | 0%  |
+
+So the corridor is gentle on purpose: a student getting 7 in 10 right sees drones get close but
+almost never loses a wave, and it only bites below 6 in 10. Towers cut losses about threefold.
+A lost wave means redoing its typed problems, which is the right consequence at 5 in 10 and
+too much at 8 in 10. If it turns out to feel toothless, `TUNING.pack = 4` or `TUNING.lane = 5`
+are the first things to try; neither has been simulated.
+
 ## Anatomy of a generated problem
 
 `story/episodes/heist2-skills.js` and `siege3-skills.js`. A skill has a few "forms" (shapes of
@@ -187,8 +210,7 @@ so the pictures cannot drift from the game.
 - **One solution route.** The guessed wrong working assumes one way of doing each problem. A
   student who took another route will answer "No, I did something else"; that answer is the
   data that would justify adding routes.
-- **Episode 3's balance is untested on a person.** The corridor numbers come from simulation
-  and reasoning, not play.
+- **Episode 3's balance is untested on a person.** See the simulation table above.
 - **Episode 1 has no screen previews.**
 - **Shared code is partly duplicated.** `ep2.js` and `ep3.js` each carry their own copy of the
   save, timing and report plumbing.

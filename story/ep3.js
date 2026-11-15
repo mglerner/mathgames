@@ -78,7 +78,7 @@ function save() {
 let toMenu = () => {};
 let mark = visibleMs(); // start of the current stretch of on-screen time
 let pmark = 0; // when the problem now being worked on was first shown
-let holdMark = false; // the next draw is the same problem (the aim changed), so its clock keeps running
+let holdMark = false; // the next draw is the same stretch of thinking (aim changed, or an unfinished entry): the clock keeps running
 /** @type {Record<string, number> | undefined} */ let slideFrom; // where each drone was before the last answer
 const chapter = () => (S.step <= BREAK_AT ? 1 : 2);
 function charge() {
@@ -96,14 +96,28 @@ const go = (/** @type {object} */ patch = {}) => { charge(); Object.assign(S, pa
 const send = () => (frozen ? Promise.resolve(false) : post(S.sid, report()));
 
 /**
- * Deal the next unused problem of one form of a skill. Episode 2 dealt from the front of each
- * list, so this one deals from the back: the same numbers do not come round again.
+ * Which problem to deal as the k-th of a form here. Episode 2 dealt `used` of them from the front
+ * of the list (and showed the last one of form 0 on a demo card), so this episode deals from the
+ * back and stops before it reaches those. If a short list runs out it starts again from the back,
+ * and `again` says so: those numbers have been seen before in this episode.
+ * @param {number} total @param {number} form @param {number} used @param {number} k
  */
+export function dealIndex(total, form, used, k) {
+  const start = form === 0 ? total - 2 : total - 1;
+  const free = Math.max(1, start + 1 - used);
+  return { n: start - (k % free), again: k >= free };
+}
+/** How many problems of one form episode 2 has dealt on this device. */
+function usedByEp2(/** @type {string} */ key) {
+  try { return (JSON.parse(localStorage.getItem('story:heist2:v1') || '{}').k || {})[key] || 0; } catch { return 0; }
+}
+/** Deal the next problem of one form of a skill. */
 function take(/** @type {string} */ skill, /** @type {number} */ form) {
   const key = `${skill}:${form}`;
   const k = S.k[key] || 0;
   S.k[key] = k + 1;
-  return { skill, form, n: count(skill, form) - 2 - k };
+  const { n, again } = dealIndex(count(skill, form), form, usedByEp2(key), k);
+  return { skill, form, n, ...(again ? { again: true } : {}) };
 }
 const P = (/** @type {any} */ ref) => problem(ref.skill, ref.form, ref.n);
 const earn = (/** @type {number} */ n) => { S.parts += n; S.earned += n; };
@@ -125,6 +139,7 @@ export function makePlan(wave, log = loadLog()) {
   /** @type {Record<string, string>} */ const levels = {};
   /** @type {{skill: string, form: number}[]} */ const scouts = [];
   /** @type {{skill: string, form: number}[][]} */ const per = [];
+  /** @type {string[]} */ const sent = []; // review skills with at least one drone: the only ones the big drone may carry
   for (const s of review) {
     const lv = level(s);
     levels[s] = lv;
@@ -134,6 +149,7 @@ export function makePlan(wave, log = loadLog()) {
     // the hardest shape first: a student with one drone to answer gets the one that says the most
     const list = Array.from({ length: n }, (_, i) => ({ skill: s, form: forms - 1 - (i % forms) }));
     per.push(list);
+    if (n > 0) sent.push(s);
     if (TUNING.reteach.includes(lv)) for (const f of [...new Set(list.map((x) => x.form))].sort()) scouts.push({ skill: s, form: f });
   }
   for (const s of wave.fresh) {
@@ -146,8 +162,8 @@ export function makePlan(wave, log = loadLog()) {
   for (let i = 0; per.some((l) => l[i]); i++) for (const l of per) if (l[i]) order.push(l[i]);
   for (let i = 0; order.length && order.length < TUNING.minWave; i++) order.push({ ...order[i] });
   /** @type {any[]} */ const specs = order.map((p) => ({ plates: [p] }));
-  if (wave.boss && review.length) {
-    specs.push({ boss: true, plates: Array.from({ length: TUNING.bossPlates }, (_, i) => { const s = review[i % review.length]; return { skill: s, form: SKILLS[s].forms - 1 }; }) });
+  if (wave.boss && sent.length) {
+    specs.push({ boss: true, plates: Array.from({ length: TUNING.bossPlates }, (_, i) => { const s = sent[i % sent.length]; return { skill: s, form: SKILLS[s].forms - 1 }; }) });
   }
   return { scouts, specs, levels };
 }
@@ -157,13 +173,13 @@ function planFor(/** @type {number} */ wi) {
   return S.plan[wave.id];
 }
 /** Move on, passing over a wave with nothing to send and a scout step with nothing to teach. */
-function advance() {
+function advance(/** @type {object} */ keep = {}) {
   let i = S.step + 1;
   for (; STEPS[i].wi !== undefined; i++) {
     const pl = planFor(STEPS[i].wi);
     if (pl.specs.length && !(STEPS[i].t === 'scout' && !pl.scouts.length)) break;
   }
-  go({ step: i, sub: '', cur: null, opt: null, sc: null, miss: null, near: null, w: null, target: null, flash: '' });
+  go({ step: i, sub: '', cur: null, opt: null, sc: null, miss: null, near: null, w: null, target: null, flash: '', ...keep });
 }
 
 // ---------------------------------------------------------------- report
@@ -205,11 +221,11 @@ function report() {
     const r = S.waves[wave.id];
     if (!pl) { out.push(`${wave.title}: not reached`); continue; }
     out.push(`${wave.title}: ${Object.entries(pl.levels).map(([s, lv]) => `${s} was ${lv}`).join(', ')} -> ${pl.scouts.length} scouts, ${pl.specs.length} drones`
-      + (r ? ` | ${r.result || 'in progress'}, ${r.tries} attempt(s), ${r.breaches} drone(s) reached the case` : ' | not started'));
+      + (r ? ` | ${r.result || 'in progress'}, ${r.tries} attempt(s), ${r.breaches} drone(s) reached the case over all attempts` : ' | not started'));
   }
-  out.push('', 'TYPED ANSWERS, in order');
+  out.push('', 'TYPED ANSWERS, in order (the time is from the previous answer, or the start of the wave, to this one)');
   for (const t of S.typed) {
-    out.push(`  [${t.where} ${t.skill}${t.boss ? ', Chairman' : ''}] ${t.ask} | typed ${t.got} | ${t.ok ? 'right' : `WRONG (answer ${t.ans})`} | ${secs(t.ms)}`);
+    out.push(`  [${t.where} ${t.skill}${t.boss ? ', Chairman' : ''}] ${t.ask} | typed ${t.got} | ${t.ok ? 'right' : `WRONG (answer ${t.ans})`} | ${secs(t.ms)}${t.again ? ' | numbers seen before in this episode' : ''}`);
     if (!t.ok) out.push(`      ${t.match === undefined ? 'no note yet' : `${t.match ? `"probably wrote" matched: ${t.match}` : 'no known slip matched, so no working was guessed'} | their words: ${t.text}`}`);
   }
   out.push('', 'SCOUTS (multiple choice, for teaching)');
@@ -273,12 +289,12 @@ function render() {
   if (step.t === 'story') {
     const page = step.id === 'intro' ? { title: content.title, text: content.intro } : content.ending;
     main.innerHTML = `<h1>${page.title}</h1>${paras(page.text)}`;
-    main.append(button(step.id === 'intro' ? 'Pick up the keypad' : 'Debrief', advance));
+    main.append(button(step.id === 'intro' ? 'Pick up the keypad' : 'Debrief', () => advance()));
   } else if (step.t === 'break') {
     const b = content.chapterBreak;
     if (S.sub === 'stopped') {
       main.innerHTML = `<h2>${b.title}</h2>${paras(b.stopped)}`;
-      main.append(button('I am back. Start chapter 2', advance));
+      main.append(button('I am back. Start chapter 2', () => advance()));
     } else {
       main.innerHTML = `<h2>${b.title}</h2>${paras(b.text)}`;
       main.append(button('Stop here for today', () => { go({ sub: 'stopped' }); send(); }),
@@ -290,7 +306,7 @@ function render() {
     main.innerHTML = `<h2>Wave ${step.wi + 1}: ${wave.title}</h2>${paras(wave.story)}
       ${step.wi === 0 ? `<div class="similar">${paras(content.howTo)}</div>` : ''}
       <p class="hint">On the plates: ${names.join('; ')}.</p>`;
-    main.append(button('Get ready', advance));
+    main.append(button('Get ready', () => advance()));
   } else if (step.t === 'scout') {
     scoutScreens(main, /** @type {any} */ (wave), planFor(step.wi), flash);
   } else if (step.t === 'cart') {
@@ -345,7 +361,7 @@ function scoutScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, 
         earn(gain);
         S.flash = `The scout folds up.${gain ? ` +1 part. You have ${S.parts}.` : ''}`;
         const i = S.sc.i + 1;
-        if (i >= pl.scouts.length) { send(); advance(); return; }
+        if (i >= pl.scouts.length) { send(); advance({ flash: S.flash }); return; }
         const nx = pl.scouts[i];
         const cur = take(nx.skill, nx.form);
         S.scouts.push({ wave: wave.id, skill: nx.skill, form: nx.form, ask: P(cur).askTxt, wrong: [], ms: 0 });
@@ -398,7 +414,7 @@ function cartScreen(/** @type {HTMLElement} */ main, /** @type {string} */ flash
   const sb = button(`Fit a spare shutter &middot; ${content.spare.cost} parts`, () => { S.parts -= content.spare.cost; S.spare++; go(); }, 'btn quiet');
   sb.disabled = S.parts < content.spare.cost || S.spare >= MAX_SPARE;
   kit.append(sb);
-  main.append(kit, button('To the corridor', advance));
+  main.append(kit, button('To the corridor', () => advance()));
 }
 
 /** Give every drone that needs one a fresh problem. */
@@ -454,7 +470,7 @@ function waveScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, /
       const g = p.grade(vals);
       if (g.near) { S.nears[p.skill] = (S.nears[p.skill] || 0) + 1; holdMark = true; go({ near: { key: refKey(aim.ref), slip: g.slip } }); return; }
       const ms = visibleMs() - pmark;
-      S.typed.push({ skill: p.skill, where: wave.id, ask: p.askTxt, ans: p.ansTxt, got: p.gotTxt(vals), ok: g.ok, ms, ...(aim.boss ? { boss: true } : {}) });
+      S.typed.push({ skill: p.skill, where: wave.id, ask: p.askTxt, ans: p.ansTxt, got: p.gotTxt(vals), ok: g.ok, ms, ...(aim.boss ? { boss: true } : {}), ...(aim.ref.again ? { again: true } : {}) });
       recordAttempt(p.skill, g.ok, ms, `${content.id}:${wave.id}`);
       const ref = aim.ref;
       slideFrom = Object.fromEntries(w.drones.map((/** @type {any} */ d) => [d.id, d.pos]));
@@ -464,7 +480,7 @@ function waveScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, /
       const said = [...new Set(ev.map((e) => EVENT[/** @type {keyof typeof EVENT} */ (e.t)]).filter(Boolean))].join(' ');
       const next = w.drones.find((/** @type {any} */ d) => d.id === S.target) || front(w);
       const patch = { near: null, target: next ? next.id : null, flash: said };
-      if (!g.ok) { go({ ...patch, sub: 'miss', miss: { ref, ti: S.typed.length - 1, id: g.id, got: p.gotHtml(vals), slip: g.slip } }); return; }
+      if (!g.ok) { go({ ...patch, sub: 'miss', miss: { ref, ti: S.typed.length - 1, id: g.id, got: p.gotHtml(vals), slip: g.slip, did: aim.id } }); return; }
       if (w.over) settle(wave, patch); else go(patch);
     });
     const how = document.createElement('p');
@@ -479,7 +495,9 @@ function waveScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, /
         ${o ? `<p>You probably wrote something like this:</p>${lines(o.guess)}` : ''}<p>${S.miss.slip}</p></div>
       <div class="fixed"><h3>Written correctly</h3>${lines(p.worked)}</div>
       ${p.quick ? `<div class="quick"><h3>Where this is heading: one step</h3>${p.quick}</div>` : ''}
-      <p>That drone shuffles its plate: new numbers. The rest have all moved up one locker.</p>${o ? matchForm : ''}${noteLabel}`;
+      <p>${w.drones.some((/** @type {any} */ d) => d.id === S.miss.did)
+    ? 'That drone shuffles its plate: new numbers. Every drone has moved up one locker.'
+    : 'That drone reached the trophy case with its plate unsolved.'}</p>${o ? matchForm : ''}${noteLabel}`;
     reflect(main, !!o, 'Back to the corridor', (note) => {
       Object.assign(S.typed[S.miss.ti], { match: null, ...note });
       if (w.over) settle(wave, { miss: null }); else go({ sub: '', miss: null });
@@ -488,11 +506,12 @@ function waveScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, /
   } else if (S.sub === 'lost') {
     main.innerHTML = `<h2>${wave.title}: shutters down</h2>${paras(wave.lost)}
       <p>Nothing you have earned is lost. Wrench props the far doors open, which gives you one more locker of corridor. Same wave, new numbers.</p>`;
-    main.append(button('Reset the corridor', () => { S.retry[wave.id] = (S.retry[wave.id] || 0) + 1; go({ sub: '', w: null, target: null }); }));
+    const again = (/** @type {number} */ back) => { S.retry[wave.id] = (S.retry[wave.id] || 0) + 1; go({ step: S.step - back, sub: '', w: null, target: null }); };
+    main.append(button('Reset the corridor', () => again(0)), button(`Wrench's cart first (you have ${S.parts} parts)`, () => again(1), 'btn quiet'));
   } else {
     main.innerHTML = `<h2>${wave.title}: clear</h2>${paras(wave.won)}${partsLine(rec.bonus)}
       ${rec.bonus === 2 ? '' : '<p class="hint">A wave where nothing reaches the case is worth 2 parts.</p>'}`;
-    main.append(button('Keep going', advance));
+    main.append(button('Keep going', () => advance()));
   }
 }
 /** A wave has just ended: book it and show the result. */

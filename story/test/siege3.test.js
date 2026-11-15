@@ -219,3 +219,46 @@ test('plan: TUNING.force overrides the log, and a wave with nothing to send is p
     TUNING.force = {};
   }
 });
+
+test('fractions: the size of an answer does not give it away', () => {
+  for (const form of [0, 1]) {
+    let big = 0, small = 0;
+    const N = count('frac', form);
+    for (let n = 0; n < N; n++) {
+      const p = problem('frac', form, n);
+      const nums = p.options.map((o) => o.num);
+      const right = p.options.find((o) => o.right).num;
+      if (right === Math.max(...nums)) big++;
+      if (right === Math.min(...nums)) small++;
+    }
+    assert.ok(big / N < 0.5, `form ${form}: the right answer is the largest choice in ${big} of ${N}`);
+    assert.ok(small / N < 0.5, `form ${form}: the right answer is the smallest choice in ${small} of ${N}`);
+  }
+});
+
+test('dealing: episode 3 never hands out numbers episode 2 used, and says so when a short list runs out', async () => {
+  const { dealIndex } = await import('../ep3.js');
+  // a list of 8, form 1, episode 2 used the first 3: five are free, dealt from the back
+  const got = Array.from({ length: 7 }, (_, k) => dealIndex(8, 1, 3, k));
+  assert.deepEqual(got.map((g) => g.n), [7, 6, 5, 4, 3, 7, 6]);
+  assert.deepEqual(got.map((g) => g.again), [false, false, false, false, false, true, true]);
+  // form 0 also keeps clear of the last problem, which episode 2 showed on a demo card
+  assert.deepEqual([0, 1, 2].map((k) => dealIndex(11, 0, 4, k).n), [9, 8, 7]);
+  assert.ok(Array.from({ length: 40 }, (_, k) => dealIndex(11, 0, 4, k).n).every((n) => n >= 4 && n <= 9));
+  // everything already used: still deals something, flagged
+  assert.deepEqual(dealIndex(8, 1, 8, 0), { n: 7, again: false });
+  assert.equal(dealIndex(8, 1, 8, 1).again, true);
+});
+
+test('plan: the big drone only carries skills this wave is sending', () => {
+  const w4 = content.waves[3];
+  TUNING.force = { dist: 0 };
+  try {
+    const p = makePlan(w4, {});
+    assert.ok(Object.keys(p.levels).includes('dist'), 'dist is among the weakest');
+    assert.ok(p.specs.at(-1).boss);
+    assert.ok(p.specs.at(-1).plates.every((pl) => pl.skill !== 'dist'), 'but with no drones and no scout, it is not on the big drone');
+  } finally {
+    TUNING.force = {};
+  }
+});

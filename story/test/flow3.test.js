@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 test('episode 3: full play-through', async () => {
-  const store = {};
+  const store = { 'story:tester': '1' }; // a teacher's device: episode 3 is open without finishing episode 2
   const posts = [];
   const mk = (tag) => ({
     tag, children: [], className: '', _h: '', listeners: {}, disabled: false, value: '', textContent: '', dataset: {},
@@ -196,7 +196,7 @@ test('episode 3: full play-through', async () => {
   formData = { feel: 'A game', pace: 'Good: I could think', next: 'the math bowl', broken: '' };
   click('Done');
   const rep = flat(main()).find((n) => n.tag === 'textarea').value;
-  assert.match(rep, /The Vark Job 3 \(Open House\): feedback/);
+  assert.match(rep, /The Vark Job 3 \(Open House\): feedback \(TEST RUN by a teacher, not the student\)/);
   assert.match(rep, /finished, debrief done/);
   assert.match(rep, /Towers: glue at locker 2, fan at locker 3/);
   assert.match(rep, /Distributing a negative: [Yn ]+\n {2}status, all typed answers on this device, every episode: /);

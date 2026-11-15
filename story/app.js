@@ -4,13 +4,14 @@
 import * as ep1 from './ep1.js';
 import * as ep2 from './ep2.js';
 import * as ep3 from './ep3.js';
-import { button, cleanup } from './lib.js';
+import { button, cleanup, TESTER } from './lib.js';
 
 const AT = 'story:at';
 const EPISODES = [
   { id: 'pilot', n: 1, mod: ep1, blurb: 'Five locks. Get the school trophy back out of Vark Tower.' },
   { id: 'heist2', n: 2, mod: ep2, blurb: 'Four floors, two chapters. Vark has dared you to come back for his own cup.' },
-  { id: 'siege3', n: 3, mod: ep3, blurb: 'Vark comes to the school. His problems fly down the corridor at you. Stop them.' },
+  // Episode 3 decides what to ask from how episode 2 went, so it waits for it (a teacher's test device does not).
+  { id: 'siege3', n: 3, mod: ep3, after: ep2, blurb: 'Vark comes to the school. His problems fly down the corridor at you. Stop them.' },
 ];
 const app = /** @type {HTMLElement} */ (document.getElementById('app'));
 
@@ -23,7 +24,7 @@ const toMenu = () => setAt('menu');
 function show(/** @type {string | null} */ id) {
   cleanup();
   const ep = EPISODES.find((e) => e.id === id);
-  if (ep) { ep.mod.open(app, toMenu); window.scrollTo(0, 0); return; }
+  if (ep && (!ep.after || TESTER || ep.after.summary() === 'Finished')) { ep.mod.open(app, toMenu); window.scrollTo(0, 0); return; }
   app.innerHTML = '';
   const head = document.createElement('header');
   head.innerHTML = '<span>The Vark Job</span><span>Episodes</span>';
@@ -33,7 +34,12 @@ function show(/** @type {string | null} */ id) {
     const row = document.createElement('div');
     row.className = 'item';
     row.innerHTML = `<b>Episode ${e.n}: ${e.mod.title}</b><br><span>${e.blurb}</span><br><span>${e.mod.summary()}</span>`;
-    row.append(button(`Play episode ${e.n}`, () => setAt(e.id)));
+    if (e.after && !TESTER && e.after.summary() !== 'Finished') {
+      const wait = document.createElement('p');
+      wait.className = 'hint';
+      wait.textContent = `Opens when episode ${e.n - 1} is finished.`;
+      row.append(wait);
+    } else row.append(button(`Play episode ${e.n}`, () => setAt(e.id)));
     main.append(row);
   }
   app.append(head, main);
