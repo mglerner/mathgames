@@ -109,7 +109,8 @@ for teaching), the cart, and the wave itself (typed).
 ### Episode 3b: real-time tower defence
 
 The corridor above is episode 3a ("turns" mode in the code). It is safe but does not feel like
-tower defence. Episode 3b ("live" mode) is the same night with a real-time corridor, and opens
+tower defence. Episode 3b ("live" mode) has a real-time corridor and its own story (the night
+after: the captured drones, rewired by Wrench as buzzer practice for the Math Bowl), and opens
 when 3a is finished. The two are one file, `story/ep3.js`, loaded twice by the menu; each has
 its own saved game, and 3b carries on down the problem lists from where 3a stopped. Scouts,
 wave plans, the mastery log and the report work the same way. The rules are in

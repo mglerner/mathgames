@@ -84,6 +84,7 @@ test('episode 3, live mode: full play-through', async () => {
   assert.equal(store['story:at'], 'siege3b');
   assert.equal(st().mode ?? 'live', 'live');
   assert.match(html(), /slow to a crawl/);
+  assert.match(html(), /The Math Bowl has a buzzer/);
   assert.doesNotMatch(html(), /one locker closer/);
   click('Pick up the keypad');
   assert.equal(st().mode, 'live');
@@ -211,6 +212,8 @@ test('episode 3, live mode: full play-through', async () => {
   assert.equal(bossTyped.length, TUNING.bossPlates);
   click('Keep going');
 
+  assert.match(html(), /Buzzer/);
+  assert.doesNotMatch(html(), /Forty\. And a Chairman/);
   click('Debrief');
   assert.match(html(), /keep coming while you work/);
   formData = { feel: 'A game', pace: 'Fun: I liked the rush', next: '', broken: '' };

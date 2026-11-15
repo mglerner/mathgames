@@ -276,8 +276,9 @@ function report() {
 const partsLine = (/** @type {number} */ n) => `<p class="cleared">+${n} part${n === 1 ? '' : 's'}. You have ${S.parts}.</p>`;
 const nearNote = (/** @type {any} */ ref) => (S.near && ref && S.near.key === refKey(ref)
   ? `<div class="why"><h3>Not finished</h3><p>${S.near.slip}</p><p>Same plate. This did not count against you${S.mode === 'live' ? '' : ', and the drones did not move'}: finish it.</p></div>` : '');
-/** A paragraph that may differ by mode (see `intro` in episodes/siege3.js). */
-const byMode = (/** @type {any} */ t) => (typeof t === 'string' ? t : t[S.mode]);
+/** Episode 3b's own text for something, where it has any (`live` in episodes/siege3.js); else the 3a text. */
+const told = (/** @type {any} */ turns, /** @type {any} */ live) => (S.mode === 'live' && live) || turns;
+const waveText = (/** @type {any} */ wave, /** @type {'story' | 'won' | 'lost'} */ k) => told(wave[k], /** @type {any} */ (content.live.waves)[wave.id]?.[k]);
 
 /** The corridor picture. Returns the canvas; it keeps itself moving until the next screen is drawn. */
 function corridor(/** @type {{lane: number, shutters: number, sockets?: number[]}} */ o) {
@@ -322,7 +323,7 @@ function render() {
   S.flash = '';
 
   if (step.t === 'story') {
-    const page = step.id === 'intro' ? { title: TITLE, text: content.intro.map(byMode) } : content.ending;
+    const page = step.id === 'intro' ? { title: TITLE, text: told(content.intro, content.live.intro) } : told(content.ending, content.live.ending);
     main.innerHTML = `<h1>${page.title}</h1>${paras(page.text)}`;
     main.append(button(step.id === 'intro' ? 'Pick up the keypad' : 'Debrief', () => advance()));
   } else if (step.t === 'break') {
@@ -331,14 +332,14 @@ function render() {
       main.innerHTML = `<h2>${b.title}</h2>${paras(b.stopped)}`;
       main.append(button('I am back. Start chapter 2', () => advance()));
     } else {
-      main.innerHTML = `<h2>${b.title}</h2>${paras(b.text)}`;
+      main.innerHTML = `<h2>${b.title}</h2>${paras(told(b.text, content.live.breakText))}`;
       main.append(button('Stop here for today', () => { go({ sub: 'stopped' }); send(); }),
         button('Keep going now', () => { send(); advance(); }, 'btn quiet'));
     }
   } else if (step.t === 'brief') {
     const pl = planFor(step.wi);
     const names = [...new Set(pl.specs.flatMap((/** @type {any} */ s) => s.plates.map((/** @type {any} */ p) => SKILLS[p.skill].name)))];
-    main.innerHTML = `<h2>Wave ${step.wi + 1}: ${wave.title}</h2>${paras(wave.story)}
+    main.innerHTML = `<h2>Wave ${step.wi + 1}: ${wave.title}</h2>${paras(waveText(wave, 'story'))}
       ${step.wi === 0 ? `<div class="similar">${paras(S.mode === 'live' ? content.howToLive : content.howTo)}</div>` : ''}
       <p class="hint">On the plates: ${names.join('; ')}.</p>`;
     main.append(button('Get ready', () => advance()));
@@ -551,7 +552,7 @@ function missScreen(/** @type {HTMLElement} */ main, /** @type {any} */ wave, /*
 function endScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, /** @type {any} */ rec) {
   const isLive = S.mode === 'live';
   if (S.sub === 'lost') {
-    main.innerHTML = `<h2>${wave.title}: shutters down</h2>${paras(wave.lost)}
+    main.innerHTML = `<h2>${wave.title}: shutters down</h2>${paras(waveText(wave, 'lost'))}
       <p>Nothing you have earned is lost. ${isLive
     ? `Wrench turns the cart upside down and ${L.retryParts} more parts fall out.`
     : 'Wrench props the far doors open, which gives you one more locker of corridor.'} Same wave, new numbers.</p>`;
@@ -562,7 +563,7 @@ function endScreens(/** @type {HTMLElement} */ main, /** @type {any} */ wave, /*
     };
     main.append(button('Reset the corridor', () => again(0)), button(`Wrench's cart first (you have ${S.parts + (isLive ? L.retryParts : 0)} parts)`, () => again(1), 'btn quiet'));
   } else {
-    main.innerHTML = `<h2>${wave.title}: clear</h2>${paras(wave.won)}${partsLine(rec.bonus)}
+    main.innerHTML = `<h2>${wave.title}: clear</h2>${paras(waveText(wave, 'won'))}${partsLine(rec.bonus)}
       ${rec.bonus === 2 ? '' : '<p class="hint">A wave where nothing reaches the case is worth 2 parts.</p>'}`;
     main.append(button('Keep going', () => advance()));
   }
@@ -846,6 +847,9 @@ export function previews() {
   const l4 = lmid([{ skill: 'frac', form: 1 }, { skill: 'rationalize', form: 1 }], { queue: [] });
   l4.squads.push(/** @type {any} */ ({ id: 9, boss: true, at: 1, shield: true, until: 10, ref: ref('rationalize', 1), plates: boss.plates, drones: [{ id: 29, d: 120, hp: 20, max: 30 }] }));
   out.push({ name: 'e3-live-boss', patch: { ...lbase, step: at((s) => s.t === 'wave' && s.wi === 3), sub: 'plate', w: l4, target: 9 }, fill: true });
+  out.push({ name: 'e3-live-brief-boss', patch: { ...lbase, step: at((s) => s.t === 'brief' && s.wi === 3) } });
+  out.push({ name: 'e3-live-break', patch: { mode: 'live', step: BREAK_AT } });
+  out.push({ name: 'e3-live-ending', patch: { mode: 'live', step: at((s) => s.t === 'story' && s.id === 'ending') } });
   out.push({ name: 'e3-live-debrief', patch: { mode: 'live', step: at((s) => s.t === 'debrief') } });
   out.push({ name: 'e3-break', patch: { step: BREAK_AT } }, { name: 'e3-break-stopped', patch: { step: BREAK_AT, sub: 'stopped' } });
   out.push({ name: 'e3-ending', patch: { step: at((s) => s.t === 'story' && s.id === 'ending') } });

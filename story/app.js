@@ -13,8 +13,8 @@ const EPISODES = [
   { id: 'heist2', n: '2', mod: ep2, blurb: 'Four floors, two chapters. Vark has dared you to come back for his own cup.' },
   // Episode 3 decides what to ask from how episode 2 went, so it waits for it (a teacher's test device does not).
   { id: 'siege3', n: '3a', mod: ep3a, after: ep2, afterN: '2', blurb: 'Vark comes to the school. His problems fly down the corridor at you. Stop them. No clock: they move when you answer.' },
-  // 3b is the same night as real-time tower defence, for speed on what 3a taught.
-  { id: 'siege3b', n: '3b', mod: ep3b, after: ep3a, afterN: '3a', blurb: 'The same night, at full speed. Build launchers, crack the plates, and be quick: this time they do not wait.' },
+  // 3b is the night after, as real-time tower defence: speed on what 3a taught.
+  { id: 'siege3b', n: '3b', mod: ep3b, after: ep3a, afterN: '3a', blurb: 'The night after. Wrench has rewired the drones for buzzer practice. Build launchers, crack the plates, and be quick: this time they do not wait.' },
 ];
 const app = /** @type {HTMLElement} */ (document.getElementById('app'));
 

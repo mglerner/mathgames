@@ -56,21 +56,14 @@ export const content = {
   id: 'siege3',
   title: 'Open House',
   titleLive: 'Open House, Rush Hour',
-  // An entry that is {turns, live} is the paragraph for each way the corridor can play (episode 3a or 3b).
   intro: [
     `Three weeks of nothing. Then Dez turns up at lunch with a delivery note she should not have.`,
     `"Forty crates. Addressed to the school roof. Signed for by a 'Mr L. V. Arkwright', who does not exist." She puts it on the table. "He said next time he comes to us. It is next time."`,
     `That night the three of you are in the main corridor with the lights off. At the far end are the double doors to the yard. At this end is the trophy case: the 1987 state championship, and next to it a 1998 Tri-County Math Bowl cup with a label in Dez's handwriting that says <i>ON LOAN</i>.`,
     `Something on the roof starts to hum.`,
     `The first one comes through the letterbox. It is the size of a pizza box, it flies, and it has a brass plate bolted to the front with a problem engraved on it.`,
-    {
-      turns: `Wrench catches it in a mop bucket and has the back off in ten seconds. "Oh, he cannot help himself," she says. "Look at the firmware. A drone with a solved plate has nothing left to do. It folds up. He made the off switch a math problem."`,
-      live: `Wrench catches it in a mop bucket and has the back off in ten seconds. "Oh, he cannot help himself," she says. "Look at the firmware. The plate is the armour. Solve what is on it and the shield drops, and then a tennis ball will do the rest. He made the off switch a math problem."`,
-    },
-    {
-      turns: `The PA system crackles. <i>"Good evening,"</i> says Lucian Vark, from every speaker in the building. <i>"I am not a barbarian. A problem deserves an attempt, so my machines wait for one. Take all the time you like. But each answer you enter, right or wrong, they come one locker closer. Do try to make them count."</i>`,
-      live: `The PA system crackles. <i>"Good evening,"</i> says Lucian Vark, from every speaker in the building. <i>"My machines fly in formation, and each formation flies behind a brass plate. Nothing your friend with the spanner can build will scratch them while the plate is unsolved. I am not a barbarian: while you work on a plate they will slow to a crawl. They will not stop. Do try to be quick. And do try to be right."</i>`,
-    },
+    `Wrench catches it in a mop bucket and has the back off in ten seconds. "Oh, he cannot help himself," she says. "Look at the firmware. A drone with a solved plate has nothing left to do. It folds up. He made the off switch a math problem."`,
+    `The PA system crackles. <i>"Good evening,"</i> says Lucian Vark, from every speaker in the building. <i>"I am not a barbarian. A problem deserves an attempt, so my machines wait for one. Take all the time you like. But each answer you enter, right or wrong, they come one locker closer. Do try to make them count."</i>`,
     `"So we do not guess," says Dez.`,
     `"We do not guess," says Wrench, and hands you the keypad.`,
   ],
@@ -159,6 +152,71 @@ export const content = {
       `"Did he just challenge us to a quiz?" says Wrench.`,
       `"He challenged us to a quiz," says Dez. She looks at the 1998 cup, then at you. "We are going to need a bigger case."`,
     ],
+  },
+  // Episode 3b tells its own story: the night after, with Vark's drones rewired for practice.
+  // Anything not given here falls back to the 3a text above.
+  live: {
+    intro: [
+      `"The Math Bowl has a buzzer," says Dez.`,
+      `It is the night after the open house. The three of you are back in the main corridor. Stacked against the lockers are forty folded drones and one folded Chairman.`,
+      `"You were right every time it mattered," she says. "You were also slow. Vark's team will not be slow. In the Bowl, the first hand on the buzzer gets the question."`,
+      `Wrench has been busy. Every drone has its back off and a new chip in it. "They are ours now," she says. "Mostly. I have set them to fly round the whole school, so there is room to work. And I gave them shields, or this would be too easy." She pats a machine made from a leaf blower and a bucket of tennis balls. "Solve the plate, the shield drops, and this does the rest."`,
+      `"Mostly ours?" says Dez.`,
+      `"I could not get the part that goes for the trophy case out of the firmware," says Wrench. "So the shutters are real. Also, they do not stop and wait for you any more. While you work on a plate they slow to a crawl. That is all the mercy I left in."`,
+      `Dez picks up the PA microphone and does a voice. <i>"Good evening. I am Lucian Vark, and I am a very sore loser."</i>`,
+      `"Right first," says Wrench, and hands you the keypad. "Then quick."`,
+    ],
+    waves: {
+      w1: {
+        story: [
+          `Wrench throws a switch, and the hum starts up on the roof exactly as it did last night.`,
+          `<i>"Floors twenty and twenty-five,"</i> says Dez into the microphone, in the voice. <i>"You remember them. I certainly do."</i>`,
+          `"Brackets and equations," says Wrench. "You know these. So this time, keep an eye on the corridor."`,
+        ],
+        won: [`The last drone folds up and drops. Wrench puts away a stopwatch she has definitely not been holding. "Again," she says. "With roots."`],
+        lost: [`Too many get through. The shutters slam down, and the drones drift back up to the roof to line up again. "That is what practice is for," says Dez.`],
+      },
+      w2: {
+        story: [
+          `<i>"My gardeners send their regards,"</i> says Dez. The voice is getting better, which worries everyone.`,
+          `"Square roots," says Wrench. "Simplest form, and no roots on the bottom. You know your squares by now. See how fast you can spot one hiding inside a number."`,
+        ],
+        won: [`Quiet. One drone still has its plant label on. Somebody has crossed out <i>basil</i> and written <i>ours</i>.`],
+        lost: [`Shutters. "Fast is no use if it is wrong," says Wrench. "A wrong answer costs you more corridor than a slow one. I built it that way on purpose."`],
+      },
+      w3: {
+        story: [
+          `"Fractions," says Wrench. "Same trick as last night. You cannot add them while the pieces are different sizes, so you multiply one of them by a well-chosen one. Three over three. Five over five. Same amount, new name."`,
+          `"The trick now is choosing the one quickly," says Dez. "Look at the two bottoms first. Often one of them already fits inside the other."`,
+        ],
+        won: [`"Fractions, at speed," says Dez. "He is going to hate that."`],
+        lost: [`Shutters. "Same size pieces first," says Wrench. "Then count the tops. Do not skip that step to save a second."`],
+      },
+      w4: {
+        story: [
+          `"I unfolded it," says Wrench. "I had to know whether it would fold back."`,
+          `The Chairman comes through the double doors sideways, taking the rest of the frame with it. A few ordinary drones tuck in ahead of it, like ducklings.`,
+          `"It still has its stack of plates," says Wrench. "Each one you solve, it drops its shield for a while, then puts it back up. You have to get through every one."`,
+        ],
+        won: [`The last plate goes dark and the Chairman folds: in half, in half again, down to the size of a briefcase. "It does fold back," says Wrench, with some relief.`],
+        lost: [`Shutters. The Chairman reverses out through the hole where the doors used to be, and lines up for another go.`],
+      },
+    },
+    breakText: [
+      `Wrench throws the switch and the hum winds down.`,
+      `"They need eight hours on charge," she says. "So do you."`,
+      `<b>This is a good place to stop for today.</b> Your progress is saved on this device. What you do on a different day counts for more.`,
+    ],
+    ending: {
+      title: 'Buzzer',
+      text: [
+        `Wrench kills the power. Forty-one machines settle onto the lino, and the corridor is quiet.`,
+        `Dez puts the microphone down. "Right, and quick," she says. "That is a team."`,
+        `"That is a third of a team," says Wrench. "He is bringing people who have done nothing else for a year."`,
+        `"Then we have until spring," says Dez. She looks at the 1998 cup, and then at the empty space in the case beside it.`,
+        `"Bring a pencil," she says.`,
+      ],
+    },
   },
   towers: [
     { id: 'glue', name: 'Glue mat', cost: 3, what: 'A drone that lands on this locker is stuck there for one extra move.' },
