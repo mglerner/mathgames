@@ -2,6 +2,7 @@
   "name": "keystone-deep",
   "version": "0.0.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "test": "node scripts/gen-registry.js && node --test \"test/**/*.test.js\"",
